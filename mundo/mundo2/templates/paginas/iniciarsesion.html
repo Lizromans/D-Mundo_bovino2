@@ -1,0 +1,98 @@
+{% extends "Base.html" %}
+{% load static %}
+{% block titulo %} Mundo Bovino {% endblock %}
+{% block css %}
+<link href="{% static 'css/iniciar.css' %}" rel="stylesheet">
+{% endblock %}
+{% block contenido %} {% endblock %}
+
+{% block main %}
+{% if messages %}
+    <div class="mensajes-container">
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">
+                {{ message }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+    <div class="mensaje">
+        <div>
+            <h1>
+                <b>¡Bienvenido a Mundo Bovino: Tu aliado digital en la gestión ganadera. Optimiza 
+                tu producción, mejora la salud de tu ganado y maximiza tus beneficios con nuestra innovadora aplicación.!</b>
+            </h1>
+        </div>
+        <div class="autenticacion">
+            <a id="inicio" href="{% url 'iniciarsesion' %}" class="btn">
+                <b>Iniciar Sesión</b>
+            </a>
+            <a id="registro" href="{% url 'registro' %}" class="btn">
+                <b>Registrarse</b>
+            </a>
+        </div>
+
+        <div class="container mt-5">
+            <div class="formulario">
+                <form class="datos" method="POST" action="{% url 'iniciarsesion' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="usuario">Usuario</label>
+                        <br>
+                        <input type="text" class="form-control" id="usuario" name="username" placeholder="Ingresa tu usuario" required>
+                        {% if error_user %}
+                            <div class="error-container">{{ error_user }}</div>
+                        {% endif %}
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <label for="contraseña">Contraseña</label>
+                        <br>
+                        <input type="password" class="form-control" id="contraseña" name="password" placeholder="Ingresa tu contraseña" required>
+                        {% if error_password %}
+                            <div class="error-container">{{ error_password }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="recordar" name="recordar">
+                        <label class="form-check-label" for="recordar">Recordar</label>
+                    </div>
+                    <!-- Enlace para mostrar el modal - Aquí está la clave -->
+                    <a id="olvido" href="{% url 'mostrar_recuperar_contrasena' %}">¿Olvidó su contraseña?</a>
+                    <input type="submit" value="Iniciar Sesión">
+                </form>
+            </div>
+        </div>
+
+<!-- Modal para el olvido de contraseña -->
+{% if mostrar_modal %}
+    <div id="modalOlvido" class="modal modal-visible">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close"><a href="{% url 'iniciarsesion' %}">&times;</a></span>
+                <h3>Recuperar Contraseña</h3>
+            </div>
+            <form method="POST" action="{% url 'recuperar_contrasena' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Ingrese su correo electrónico para recibir instrucciones sobre cómo restablecer su contraseña.</p>   
+                    <div class="form-group">
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Ingresa tu correo electrónico" required>
+                        {% if email_error %}
+                            <div class="error-container">{{ email_error }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="submit-btn">Enviar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endif %}
+
+    <script src="{% static 'js/mensajes.js' %}"></script>
+{% endblock %}

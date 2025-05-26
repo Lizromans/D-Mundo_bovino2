@@ -1,0 +1,54 @@
+{% extends "Base3.html" %}
+{% load static %}
+{% block titulo %} Mundo Bovino {% endblock %}
+{% block css %}
+<link href="{% static 'css/notificaciones.css' %}" rel="stylesheet">
+{% endblock %}
+{% block contenido %} {% endblock %}
+
+{% block main %}
+{% if messages %}
+    <div class="mensajes-container">
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">
+                {{ message }}
+                <button type="button" class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+    <div class="container">
+        <form method="POST" action="{% url 'notificaciones' %}">
+            {% csrf_token %}
+            
+            <div class="notification-item">
+                <div class="notification-info">
+                    <div class="notification-title">Notificaciones por email</div>
+                    <div class="notification-description">Recibir notificaciones en tu correo</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" name="notif_email" {% if notif_email %}checked{% endif %}>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="notification-item">
+                <div class="notification-info">
+                    <div class="notification-title">Notificaciones por push</div>
+                    <div class="notification-description">Recibir notificaciones en el navegador</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" name="notif_push" {% if notif_push %}checked{% endif %}>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="button-container">
+                <button type="submit" class="save-button">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="{% static 'js/mensajes.js' %}"></script>
+    <script src="{% static 'js/notiificaciones.js' %}"></script>
+{% endblock %}

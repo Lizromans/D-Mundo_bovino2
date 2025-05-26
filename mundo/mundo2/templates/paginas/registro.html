@@ -1,0 +1,105 @@
+{% extends "Base.html" %}
+{% load static %}
+{% block titulo %} Mundo Bovino - Registro {% endblock %}
+{% block css %}
+<link href="{% static 'css/registro.css' %}" rel="stylesheet">
+{% endblock %}
+{% block contenido %} {% endblock %}
+{% block main %}
+
+<!-- Popup message outside the form container -->
+    {% if messages %}
+    <div class="popup-container">
+        {% for message in messages %}
+        <div class="popup-overlay">
+            <div class="popup-message {{ message.tags }}">
+                <div class="popup-content">
+                    {{ message }}
+                </div>
+                <form method="post" action="{% url 'iniciarsesion' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="popup-close">Continuar</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="mensajes-container">
+        {% if form.errors %}
+                <div class="alert alert-danger">
+                    Por favor, corrige los errores indicados a continuación.
+                </div>
+                {% endif %}
+    </div>
+
+    <div class="mensaje">
+        <div>
+            <h1>
+                <b>¡Bienvenido a Mundo Bovino: Tu aliado digital en la gestión ganadera. Optimiza 
+                tu producción, mejora la salud de tu ganado y maximiza tus beneficios con nuestra innovadora aplicación.!</b>
+            </h1>
+        </div>
+        <div class="autenticacion">
+            <a id="inicio" href="{% url 'iniciarsesion' %}" class="btn">
+                <b>Iniciar Sesión</b>
+            </a>
+            <a id="registro" href="{% url 'registro' %}" class="btn">
+                <b>Registrarse</b>
+            </a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="formulario p-2">
+            <h5>Registro de Usuario</h5>
+            
+            <form class="datos" method="post" novalidate>
+                {% csrf_token %}
+                <div class="form-group m-1">
+                    <label for="email">Email *</label>
+                    {{ form.correo }}
+                    {% if form.correo.errors %}
+                        <div class="error-container">{{ form.correo.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Se enviará un enlace de verificación a este correo.</small>
+                </div>
+                <div class="form-group m-1">
+                    <label for="username">Nombre de Usuario *</label>
+                    {{ form.nom_usu }}
+                    {% if form.nom_usu.errors %}
+                        <div class="error-container">{{ form.nom_usu.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group m-1">
+                    <label for="finca">Nombre de Finca *</label>
+                    {{ form.finca }}
+                    {% if form.finca.errors %}
+                        <div class="error-container">{{ form.finca.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group m-1">
+                    <label for="password">Contraseña *</label>
+                    {{ form.contraseña }}
+                    {% if form.contraseña.errors %}
+                        <div class="error-container">{{ form.contraseña.errors }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">La contraseña debe tener al menos 8 caracteres.</small>
+                </div>
+                <div class="form-group m-1">
+                    <label for="confirm-password">Confirmar Contraseña *</label>
+                    {{ form.confcontraseña }}
+                    {% if form.non_field_errors %}
+                        <div class="error-container">{{ form.non_field_errors }}</div>
+                    {% endif %}           
+                </div>
+                <div class="form-group m-2">
+                    <input type="submit" value="Registrarse">
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="{% static 'js/mensajes.js' %}"></script>
+{% endblock %}
