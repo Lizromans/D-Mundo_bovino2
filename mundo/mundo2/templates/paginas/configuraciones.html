@@ -59,6 +59,10 @@
                         <label for="registroVentas">Registro de Ventas</label>
                     </div>
                     <div class="modulo-item">
+                        <input type="checkbox" id="registroCompras" name="registroCompras" {% if perfil.modulo_compras %}checked{% endif %}>
+                        <label for="registroCompras">Registro de Compras</label>
+                    </div>
+                    <div class="modulo-item">
                         <input type="checkbox" id="calendario" name="calendario" {% if perfil.modulo_calendario %}checked{% endif %}>
                         <label for="calendario">Calendario</label>
                     </div>
@@ -102,4 +106,5 @@
         </div>
     </div>
 <script src="{% static 'js/mensajes.js' %}"></script>
+<script src="{% static 'js/modulos.js' %}"></script>
 {% endblock %}
