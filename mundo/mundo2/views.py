@@ -990,9 +990,10 @@ def eliminar_evento(request, evento_id):
     # Si no es un POST, redirigir al calendario
     return redirect('calendario')
 
-"vistas para recordatorios"
 def obtener_recordatorios(usuario_id):
-    # Verificar que usuario_id sea válido
+    """
+    Obtiene todos los recordatorios incluyendo los de vacunación
+    """
     if usuario_id is None:
         return {
             'siete_dias': [],
@@ -1000,13 +1001,12 @@ def obtener_recordatorios(usuario_id):
             'dos_dias': [],
             'un_dia': [],
             'hoy': [],
-            'vacunacion': []  # Nueva categoría para recordatorios de vacunación
+            'vacunacion': []
         }
     
-    # Fecha actual
     hoy = date.today()
     
-    # Fechas para recordatorios (7, 4, 2, 1 día adelante y hoy)
+    # Fechas para recordatorios normales (agenda)
     fechas_recordatorio = {
         'siete_dias': hoy + timedelta(days=7),
         'cuatro_dias': hoy + timedelta(days=4),
@@ -1015,153 +1015,199 @@ def obtener_recordatorios(usuario_id):
         'hoy': hoy
     }
     
-    # Inicializar diccionario de recordatorios
+    # Inicializar recordatorios
     recordatorios = {
         'siete_dias': [],
         'cuatro_dias': [],
         'dos_dias': [],
         'un_dia': [],
         'hoy': [],
-        'vacunacion': []  # Nueva categoría para recordatorios de vacunación
+        'vacunacion': []
     }
     
     try:
-        # Buscar eventos para cada fecha de recordatorio que tengan estado 'Pendiente'
+        # Obtener recordatorios normales de la agenda
         for periodo, fecha in fechas_recordatorio.items():
             eventos = Agenda.objects.filter(
                 id_adm=usuario_id,
                 fecha=fecha,
-                estado='Pendiente'  # Solo eventos con estado pendiente
+                estado='Pendiente'
             )
             
-            # Formatear los datos para mostrarlos en las notificaciones
             eventos_formateados = []
             for evento in eventos:
                 eventos_formateados.append({
                     'cod_age': evento.cod_age,
                     'descripcion': evento.descripcion,
                     'hora': evento.hora,
-                    'tipo': evento.tipo
+                    'tipo': evento.tipo,
+                    'fecha': evento.fecha
                 })
             
-            # Añadir eventos formateados al periodo correspondiente
             recordatorios[periodo] = eventos_formateados
         
-        # ---------- LÓGICA PARA CICLO DE VACUNACIÓN ----------
+        # ========== LÓGICA DE VACUNACIÓN ==========
+        recordatorios['vacunacion'] = obtener_recordatorios_vacunacion(hoy, usuario_id)
         
-        # Definir fechas del próximo ciclo
-        año_actual = hoy.year
-        mes_actual = hoy.month
-        
-        # Ejemplo: ciclos en enero, abril, julio y octubre
-        ciclos_meses = [5, 6, 11, 12]
-        
-        # Encontrar el próximo mes de ciclo
-        proximo_mes_ciclo = None
-        for mes_ciclo in ciclos_meses:
-            if mes_ciclo > mes_actual:
-                proximo_mes_ciclo = mes_ciclo
-                break
-        
-        # Si estamos en el último trimestre, el próximo ciclo será en el próximo año
-        if proximo_mes_ciclo is None:
-            proximo_mes_ciclo = ciclos_meses[0]
-            año_proximo_ciclo = año_actual + 1
-        else:
-            año_proximo_ciclo = año_actual
-        
-        # Fechas del ciclo
-        inicio_ciclo = date(año_proximo_ciclo, proximo_mes_ciclo, 1)  # Primer día del mes
-        fin_ciclo = date(año_proximo_ciclo, proximo_mes_ciclo, 15)    # Día 15 del mes
-        
-        # 2. Comprobar si estamos cerca del inicio del ciclo (2 días antes)
-        dias_hasta_ciclo = (inicio_ciclo - hoy).days
-        
-        # 3. Comprobar si estamos dentro del ciclo
-        en_ciclo = inicio_ciclo <= hoy <= fin_ciclo
-        
-        # 4. Comprobar si terminó el ciclo recientemente (1 día después)
-        dia_despues_ciclo = hoy == (fin_ciclo + timedelta(days=1))
-        
-        # 5. Comprobar si hoy es lunes (para recordatorio semanal)
-        es_lunes = hoy.weekday() == 0  # 0 = lunes en Python
-        
-        # 6. Verificar estado de respuesta del usuario
-        # Implementación simple: usamos la sesión para almacenar la respuesta
-        # En producción, esto debería guardarse en la base de datos
-        from django.contrib.sessions.backends.db import SessionStore
-        
-        # Intentar obtener la sesión del usuario
-        try:
-            session = SessionStore(session_key=f'vacunacion_{usuario_id}')
-            usuario_confirmo = session.get('confirmo_vacunacion', False)
-        except:
-            usuario_confirmo = False
-        
-        # 7. Añadir recordatorios según corresponda
-        
-        # a. Recordatorio de aproximación al ciclo (2 días antes)
-        if 0 < dias_hasta_ciclo <= 2:
-            recordatorios['vacunacion'].append({
-                'cod_age': 'pre_vacunacion',
-                'descripcion': 'El ciclo de vacunación está por llegar, y es fundamental para proteger la salud de tus animales. 💉🐄 ⏳ Agenda tu cita con tiempo y evita riesgos innecesarios. ¡Su bienestar está en tus manos! 🏥',
-                'tipo': 'recordatorio_vacunacion',
-                'requiere_respuesta': False,
-                'fecha_inicio': inicio_ciclo.strftime('%d/%m/%Y'),
-                'fecha_fin': fin_ciclo.strftime('%d/%m/%Y')
-            })
-        
-        # b. Recordatorio semanal durante el ciclo (cada lunes)
-        if en_ciclo and es_lunes and not usuario_confirmo:
-            recordatorios['vacunacion'].append({
-                'cod_age': 'ciclo_vacunacion',
-                'descripcion': '🐮💉 ¿Ya aseguraste la protección de tus animales? 📅 No esperes más, agenda su vacunación y cuida su bienestar. 🏥 ¡Cada dosis cuenta para su salud!',
-                'tipo': 'recordatorio_vacunacion',
-                'requiere_respuesta': True,
-                'opciones': ['Sí', 'No']
-            })
-        
-        # c. Recordatorio de fin de ciclo (1 día después)
-        if dia_despues_ciclo:
-            recordatorios['vacunacion'].append({
-                'cod_age': 'post_vacunacion',
-                'descripcion': '✅ ¡El ciclo de vacunación ha concluido con éxito! ✅ 👏 Si aún no lo hiciste, no esperes más. ¡Cada vacuna es clave para su bienestar! 🏥 Nos vemos en el próximo ciclo para seguir cuidándolos juntos',
-                'tipo': 'recordatorio_vacunacion',
-                'requiere_respuesta': False
-            })
-            
     except Exception as e:
-        # En caso de error, devolver diccionario vacío
         print(f"Error al obtener recordatorios: {e}")
     
     return recordatorios
 
+def obtener_recordatorios_vacunacion(hoy, usuario_id):
+    """
+    Lógica específica para recordatorios de vacunación
+    Ciclos: 15 Mayo - 15 Junio y 15 Noviembre - 15 Diciembre
+    """
+    recordatorios_vacunacion = []
+    
+    año_actual = hoy.year
+    
+    # Definir los dos ciclos anuales
+    ciclos = [
+        {
+            'inicio': date(año_actual, 5, 15),  # 15 de mayo
+            'fin': date(año_actual, 6, 15),     # 15 de junio
+            'nombre': 'Mayo-Junio'
+        },
+        {
+            'inicio': date(año_actual, 11, 15), # 15 de noviembre
+            'fin': date(año_actual, 12, 15),    # 15 de diciembre
+            'nombre': 'Noviembre-Diciembre'
+        }
+    ]
+    
+    # Encontrar el estado actual respecto a los ciclos
+    proximo_ciclo = None
+    ciclo_actual = None
+    
+    for ciclo in ciclos:
+        # Si estamos dentro del ciclo
+        if ciclo['inicio'] <= hoy <= ciclo['fin']:
+            ciclo_actual = ciclo
+            break
+        # Si estamos antes del ciclo
+        elif hoy < ciclo['inicio']:
+            if proximo_ciclo is None:
+                proximo_ciclo = ciclo
+    
+    # Si no encontramos próximo ciclo este año, el próximo será en mayo del año siguiente
+    if proximo_ciclo is None and ciclo_actual is None:
+        proximo_ciclo = {
+            'inicio': date(año_actual + 1, 5, 15),
+            'fin': date(año_actual + 1, 6, 15),
+            'nombre': 'Mayo-Junio'
+        }
+    
+    # ===== TIPO 1: Recordatorio antes del ciclo (3 días antes) =====
+    if proximo_ciclo:
+        dias_hasta_ciclo = (proximo_ciclo['inicio'] - hoy).days
+        
+        if 1 <= dias_hasta_ciclo <= 3:
+            recordatorios_vacunacion.append({
+                'id': f'pre_vacunacion_{proximo_ciclo["inicio"].strftime("%Y%m%d")}',
+                'tipo': 'recordatorio_pre_vacunacion',
+                'descripcion': f'🚨 <strong>Ciclo de Vacunación {proximo_ciclo["nombre"]} Próximo</strong><br>'
+                              f'📅 Inicia el {proximo_ciclo["inicio"].strftime("%d/%m/%Y")}<br>'
+                              f'📅 Termina el {proximo_ciclo["fin"].strftime("%d/%m/%Y")}<br>'
+                              f'💉 Prepara todo lo necesario para la vacunación de tu ganado<br>'
+                              f'⏰ <em>Faltan {dias_hasta_ciclo} día(s)</em>',
+                'fecha_inicio': proximo_ciclo['inicio'],
+                'fecha_fin': proximo_ciclo['fin'],
+                'requiere_respuesta': False,
+                'eliminable': False
+            })
+    
+    # ===== TIPO 2: Recordatorios durante el ciclo (cada lunes) =====
+    if ciclo_actual:
+        es_lunes = hoy.weekday() == 0  # 0 = lunes
+        
+        if es_lunes:
+            dias_restantes = (ciclo_actual['fin'] - hoy).days
+            dias_transcurridos = (hoy - ciclo_actual['inicio']).days + 1
+            
+            recordatorios_vacunacion.append({
+                'id': f'ciclo_vacunacion_{hoy.strftime("%Y%m%d")}',
+                'tipo': 'recordatorio_ciclo_vacunacion',
+                'descripcion': f'💉 <strong>Recordatorio Semanal - Ciclo {ciclo_actual["nombre"]}</strong><br>'
+                              f'🐄 ¿Ya vacunaste a todos tus animales esta semana?<br>'
+                              f'📊 Día {dias_transcurridos} del ciclo de vacunación<br>'
+                              f'📅 Ciclo termina el {ciclo_actual["fin"].strftime("%d/%m/%Y")}<br>'
+                              f'⏳ <em>Quedan {dias_restantes} días del ciclo</em>',
+                'fecha_inicio': ciclo_actual['inicio'],
+                'fecha_fin': ciclo_actual['fin'],
+                'requiere_respuesta': False,
+                'eliminable': False
+            })
+    
+    # ===== TIPO 3: Recordatorio al finalizar el ciclo =====
+    # Verificar si ayer terminó un ciclo
+    ayer = hoy - timedelta(days=1)
+    
+    for ciclo in ciclos:
+        if ayer == ciclo['fin']:
+            recordatorios_vacunacion.append({
+                'id': f'post_vacunacion_{ciclo["fin"].strftime("%Y%m%d")}',
+                'tipo': 'recordatorio_post_vacunacion',
+                'descripcion': f'✅ <strong>Ciclo {ciclo["nombre"]} Finalizado</strong><br>'
+                              f'🎉 El ciclo terminó el {ciclo["fin"].strftime("%d/%m/%Y")}<br>'
+                              f'📋 Revisa que todos los animales estén vacunados<br>'
+                              f'📝 Actualiza tus registros sanitarios<br>'
+                              f'📅 <em>Próximo ciclo: {"Noviembre-Diciembre" if ciclo["nombre"] == "Mayo-Junio" else "Mayo-Junio del próximo año"}</em>',
+                'fecha_inicio': ciclo['inicio'],
+                'fecha_fin': ciclo['fin'],
+                'requiere_respuesta': False,
+                'eliminable': True  # Este se puede eliminar después de verlo
+            })
+            break
+    
+    return recordatorios_vacunacion
+
 @login_required
 def confirmar_vacunacion(request):
-    """Vista para manejar la respuesta del usuario a los recordatorios de vacunación"""
-    if request.method == 'POST':
-        respuesta = request.POST.get('respuesta')
-        
-        if respuesta == 'Sí':
-            # Guardar la confirmación en la sesión
-            # En una implementación real, esto debería guardarse en la base de datos
-            from django.contrib.sessions.backends.db import SessionStore
-            
-            usuario_id = request.session.get('usuario_id')
-            session = SessionStore(session_key=f'vacunacion_{usuario_id}')
-            session['confirmo_vacunacion'] = True
-            session.save()
-            
-            messages.success(request, "¡Gracias por confirmar la vacunación de tus animales!")
-        else:
-            messages.info(request, "Te seguiremos recordando sobre la importancia de la vacunación.")
-        
-        # Redirigir a la página desde la que se hizo la solicitud
-        referer = request.META.get('HTTP_REFERER', 'home')
-        return redirect(referer)
+    """
+    Vista para manejar las confirmaciones de vacunación (ya no se usa con botones)
+    Se mantiene por compatibilidad pero puede eliminarse si no se necesita
+    """
+    # Redirigir de vuelta a la página anterior
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+# ===== FUNCIÓN AUXILIAR PARA CONTAR RECORDATORIOS =====
+def contar_total_recordatorios(recordatorios):
+    """
+    Cuenta el total de recordatorios para mostrar en el badge
+    """
+    total = 0
     
-    # Si no es POST, redirigir al inicio
-    return redirect('home')
+    # Contar recordatorios normales
+    for periodo in ['hoy', 'un_dia', 'dos_dias', 'cuatro_dias', 'siete_dias']:
+        total += len(recordatorios.get(periodo, []))
+    
+    # Contar recordatorios de vacunación
+    total += len(recordatorios.get('vacunacion', []))
+    
+    return total
+
+# ===== PARA USO EN EL CONTEXT PROCESSOR O VISTA =====
+def agregar_recordatorios_al_contexto(request):
+    """
+    Función para agregar recordatorios al contexto de todas las páginas
+    """
+    usuario_id = request.session.get('usuario_id')
+    recordatorios = obtener_recordatorios(usuario_id)
+    total_recordatorios = contar_total_recordatorios(recordatorios)
+    
+    # Verificar si hay recordatorios (excluyendo vacunación para el mensaje "No hay recordatorios")
+    hay_recordatorios = any(
+        len(recordatorios[periodo]) > 0 
+        for periodo in ['hoy', 'un_dia', 'dos_dias', 'cuatro_dias', 'siete_dias']
+    )
+    
+    return {
+        'recordatorios': recordatorios,
+        'total_recordatorios': total_recordatorios,
+        'hay_recordatorios': hay_recordatorios
+    }
 
 "Vistas para crud de compras"
 @login_required
@@ -2317,8 +2363,8 @@ def contacto(request):
             return 'img/proveedor.png'
         elif 'veterinario' in cargo:
             return 'img/veterinario.png'
-        elif 'cliente' in cargo:
-            return 'img/cliente.png'
+        elif 'comprador' in cargo:
+            return 'img/comprador.png'
         # Añade más tipos de cargo según sea necesario
     
     # Enriquecer la consulta de contactos con rutas de imágenes
@@ -2332,7 +2378,10 @@ def contacto(request):
         "current_page_name": "Contactos",
         "tipo_filtro": tipo_filtro,
         "valor_filtro": valor_filtro,
-        "tipo_busqueda": tipo_busqueda
+        "tipo_busqueda": tipo_busqueda,
+        'recordatorios': request.recordatorios,
+        'total_recordatorios': request.total_recordatorios,
+        'hay_recordatorios': request.hay_recordatorios
     })
 
 @login_required

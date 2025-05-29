@@ -225,13 +225,16 @@ button {
 }
 
 /* Estilos para la sección de documentos */
+.fichas-container {
+    margin-bottom: 8.9%;
+}
+
 .fichas {
     background-color: #f9f9f9b7;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     padding: 15px;
     position: relative;
-    margin-bottom: 38.5%;
     transition: transform 0.5s ease, box-shadow 0.3s ease;
 }
 

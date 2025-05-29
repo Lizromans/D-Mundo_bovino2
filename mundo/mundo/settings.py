@@ -39,9 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'webpush',
     'mundo2'
 ]
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -147,5 +147,9 @@ EMAIL_HOST_USER = 'mundobovinoapp@gmail.com'
 EMAIL_HOST_PASSWORD = 'pwgm yfvf yagn sgvl'
 DEFAULT_FROM_EMAIL = 'Mundo Bovino <mundobovinoapp@gmail.com>'
 
-
-
+# Web Push settings
+WEBPUSH_SETTINGS = {
+    "VAPID_PUBLIC_KEY": "BGn3GXYc5QTwPTtd3O64Mk5kwVkCmdKu-PFbauJ_N-_BKarD6auE3EW4Hgo6xw3N46BbWvrkzldt-T7WHFMMKY8",
+    "VAPID_PRIVATE_KEY": "jzDamU8qJdwKpRnuUQN9yZpdLwUSXDbGcgu5OPXyoks", 
+    "VAPID_ADMIN_EMAIL": "mundobovinoapp@gmail.com",
+}

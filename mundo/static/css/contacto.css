@@ -171,13 +171,16 @@ button {
 }
 
 /* Estilos para las fichas de contactos */
+.fichas-container {
+    margin-bottom: 12.3%;
+}
+
 .fichas {
     background-color: #f9f9f9b7;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     padding: 15px;
     position: relative;
-    margin-bottom: 53.5%;
 }
 
 /* Contenedor de la imagen */

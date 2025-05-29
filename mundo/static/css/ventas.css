@@ -193,14 +193,18 @@ button {
     margin-left: auto;
     height: auto;
 }
+
 /* Estilos para las fichas de */
+.fichas-container {
+    margin-bottom: 5.9%;
+}
+
 .fichas {
     background-color: #f9f9f9b7;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     padding: 15px;
     position: relative;
-    margin-bottom: 25%;
     transition: transform 0.5s ease, box-shadow 0.3s ease;
 }
 
