@@ -1011,9 +1011,10 @@ textarea.form-control {
     justify-content: space-between;
     align-items: center;
     position: relative;
-    right: 20%;
+    right: 17%;
     font-size: 14px;
     margin-bottom: -3%;
+    width: 50%;
 }
 
 #evento li::marker {

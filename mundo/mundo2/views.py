@@ -6,7 +6,7 @@ from .forms import AdministradorRegistroForm
 from .models import Administrador, Agenda, Animal, Documento, Compra, DetCom, Venta, DetVen, Contacto
 from django.db import connection
 from functools import wraps
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, time
 from django.utils import timezone  # Importación correcta para timezone
 import calendar, re
 from django.template.loader import render_to_string
@@ -17,7 +17,7 @@ from django.utils.encoding import force_str, force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from xhtml2pdf import pisa
 from django.template.loader import render_to_string
 from django.http import HttpResponse
@@ -1212,6 +1212,9 @@ def agregar_recordatorios_al_contexto(request):
 "Vistas para crud de compras"
 @login_required
 def compras(request):
+    """
+    Vista para mostrar todas las compras del administrador actual
+    """
     # Obtener el ID del administrador actual desde la sesión
     usuario_id = request.session.get('usuario_id')
     
@@ -1279,77 +1282,354 @@ def compras(request):
     except Exception as e:
         messages.error(request, f"Error al cargar las compras: {str(e)}")
         return redirect('home')
-    
+
 @login_required
 def crear_compra(request):
     """
     Vista para crear una nueva compra con sus detalles
     """
     if request.method == 'POST':
+        # Obtener el ID del administrador actual desde la sesión
+        usuario_id = request.session.get('usuario_id')
+        
+        # Número máximo de intentos para manejar condiciones de carrera
+        max_intentos = 5
+        
+        for intento in range(max_intentos):
+            try:
+                with transaction.atomic():
+                    # Obtener datos del formulario
+                    fecha = request.POST.get('fecha')
+                    nom_prov = request.POST.get('nom_prov')
+                    
+                    # Validar campos obligatorios
+                    if not fecha or not nom_prov:
+                        messages.error(request, "La fecha y el nombre del proveedor son obligatorios.")
+                        return redirect('compras')
+                    
+                    try:
+                        cantidad = int(request.POST.get('cantidad', 0))
+                        if cantidad <= 0:
+                            messages.error(request, "La cantidad debe ser mayor a 0.")
+                            return redirect('compras')
+                    except (ValueError, TypeError):
+                        messages.error(request, "La cantidad debe ser un número válido.")
+                        return redirect('compras')
+                    
+                    # Formatear correctamente el precio total
+                    try:
+                        precio_total_str = request.POST.get('precio_total', '0')
+                        # Primero eliminamos todos los puntos (separadores de miles)
+                        precio_total_str = precio_total_str.replace('.', '')
+                        # Luego reemplazamos la coma decimal por punto (si existe)
+                        precio_total_str = precio_total_str.replace(',', '.')
+                        # Convertimos a float
+                        precio_total = float(precio_total_str)
+                        
+                        if precio_total < 0:
+                            messages.error(request, "El precio total no puede ser negativo.")
+                            return redirect('compras')
+                            
+                    except (ValueError, TypeError):
+                        messages.error(request, "El precio total debe ser un número válido.")
+                        return redirect('compras')
+                    
+                    # Determinar el siguiente código de compra único con SELECT FOR UPDATE
+                    ultima_compra = Compra.objects.filter(
+                        id_adm=usuario_id
+                    ).select_for_update().order_by('-cod_com').first()
+                    
+                    siguiente_cod_com = 1 if not ultima_compra else ultima_compra.cod_com + 1
+                    
+                    # Verificación adicional para asegurar unicidad
+                    while Compra.objects.filter(cod_com=siguiente_cod_com, id_adm=usuario_id).exists():
+                        siguiente_cod_com += 1
+                    
+                    # Intentar crear la compra con get_or_create para mayor seguridad
+                    compra, created = Compra.objects.get_or_create(
+                        cod_com=siguiente_cod_com,
+                        id_adm_id=usuario_id,
+                        defaults={
+                            'fecha': fecha,
+                            'nom_prov': nom_prov,
+                            'cantidad': cantidad,
+                            'precio_total': precio_total
+                        }
+                    )
+                    
+                    # Si no se creó (ya existía), incrementar el código e intentar de nuevo
+                    if not created:
+                        if intento < max_intentos - 1:
+                            continue  # Reintentar con nuevo código
+                        else:
+                            messages.error(request, "Error: No se pudo generar un código único para la compra.")
+                            return redirect('compras')
+                    
+                    # Procesar detalles de animales
+                    detalles_creados = 0
+                    errores_detalles = []
+                    
+                    for i in range(1, cantidad + 1):
+                        cod_ani = request.POST.get(f'cod_ani_{i}')
+                        edad_anicom = request.POST.get(f'edad_aniCom_{i}')
+                        peso_ani = request.POST.get(f'peso_ani_{i}')
+                        precio_uni_str = request.POST.get(f'precio_uni_{i}', '0')
+                        
+                        # Validar que el código del animal existe
+                        if not cod_ani:
+                            errores_detalles.append(f"Animal {i}: Código de animal es obligatorio.")
+                            continue
+                        
+                        # Convertir cod_ani a entero para validación
+                        try:
+                            cod_ani_int = int(cod_ani)
+                        except (ValueError, TypeError):
+                            errores_detalles.append(f"Animal {i}: El código '{cod_ani}' debe ser un número válido.")
+                            continue
+                        
+                        # Validar que el animal pertenece al administrador actual
+                        try:
+                            animal = Animal.objects.get(cod_ani=cod_ani_int, id_adm=usuario_id)
+                        except Animal.DoesNotExist:
+                            # Mejorar el mensaje de error con información más detallada
+                            animales_disponibles = Animal.objects.filter(id_adm=usuario_id).values_list('cod_ani', flat=True)
+                            if animales_disponibles:
+                                codigos_str = ', '.join(map(str, sorted(animales_disponibles)[:10]))  # Mostrar solo los primeros 10
+                                if len(animales_disponibles) > 10:
+                                    codigos_str += f"... (+{len(animales_disponibles) - 10} más)"
+                                errores_detalles.append(f"Animal {i}: El código {cod_ani} no existe o no le pertenece. Códigos disponibles: {codigos_str}")
+                            else:
+                                errores_detalles.append(f"Animal {i}: El código {cod_ani} no existe o no le pertenece. No tiene animales registrados.")
+                            continue
+                        
+                        # Formatear correctamente el precio unitario
+                        try:
+                            precio_uni_str = precio_uni_str.replace('.', '')  # Eliminar puntos de miles
+                            precio_uni_str = precio_uni_str.replace(',', '.')  # Reemplazar coma decimal por punto
+                            precio_uni = float(precio_uni_str)
+                            
+                            if precio_uni < 0:
+                                errores_detalles.append(f"Animal {i}: El precio unitario no puede ser negativo.")
+                                continue
+                                
+                        except (ValueError, TypeError):
+                            errores_detalles.append(f"Animal {i}: Precio unitario inválido.")
+                            continue
+                        
+                        # Validar edad y peso
+                        try:
+                            edad_anicom = int(edad_anicom) if edad_anicom else 0
+                            if edad_anicom < 0:
+                                edad_anicom = 0
+                        except (ValueError, TypeError):
+                            edad_anicom = 0
+                        
+                        try:
+                            peso_ani = float(peso_ani.replace(',', '.')) if peso_ani else 0
+                            if peso_ani < 0:
+                                peso_ani = 0
+                        except (ValueError, TypeError):
+                            peso_ani = 0
+                        
+                        # Crear el detalle de compra
+                        try:
+                            DetCom.objects.create(
+                                cod_com=compra,
+                                cod_ani=cod_ani_int,  # Usar el valor entero validado
+                                edad_anicom=edad_anicom,
+                                peso_anicom=peso_ani,
+                                precio_uni=precio_uni
+                            )
+                            detalles_creados += 1
+                        except Exception as e:
+                            errores_detalles.append(f"Animal {i}: Error al crear detalle - {str(e)}")
+                    
+                    # Verificar que se crearon detalles
+                    if detalles_creados == 0:
+                        # Si no se crearon detalles, eliminar la compra
+                        compra.delete()
+                        error_msg = "No se pudo crear ningún detalle de compra válido. La compra no fue registrada."
+                        if errores_detalles:
+                            # Mostrar solo los primeros 3 errores más detallados
+                            error_msg += " Errores: " + "; ".join(errores_detalles[:3])
+                            if len(errores_detalles) > 3:
+                                error_msg += f" (+{len(errores_detalles) - 3} errores más)"
+                        messages.error(request, error_msg)
+                        return redirect('compras')
+                    
+                    # Mostrar mensajes según el resultado
+                    if errores_detalles and detalles_creados < cantidad:
+                        warning_msg = f"Compra registrada con código #{compra.cod_com}, pero solo se procesaron {detalles_creados} de {cantidad} animales."
+                        if len(errores_detalles) <= 3:
+                            warning_msg += " Errores: " + "; ".join(errores_detalles)
+                        else:
+                            warning_msg += f" Se encontraron {len(errores_detalles)} errores en los datos. Revise los códigos de animales."
+                        messages.warning(request, warning_msg)
+                    else:
+                        messages.success(request, f"Compra registrada exitosamente con código #{compra.cod_com}.")
+                    
+                    return redirect('compras')
+                    
+            except IntegrityError as e:
+                if "Duplicate entry" in str(e) and intento < max_intentos - 1:
+                    # Hay una condición de carrera, reintentar
+                    time.sleep(0.1)  # Pequeña pausa antes de reintentar
+                    continue
+                else:
+                    # Si ya agotamos los intentos o es otro tipo de error de integridad
+                    messages.error(request, f"Error de integridad en la base de datos. Intente nuevamente.")
+                    return redirect('compras')
+                    
+            except Exception as e:
+                # Error inesperado
+                messages.error(request, f"Error al registrar la compra: {str(e)}")
+                return redirect('compras')
+        
+        # Si llegamos aquí, agotamos todos los intentos
+        messages.error(request, "No se pudo registrar la compra después de varios intentos. Intente nuevamente.")
+        return redirect('compras')
+    
+    else:
+        # Si no es POST, redirigir a la página de compras
+        return redirect('compras')
+    
+@login_required
+def editar_compra(request, cod_com):
+    """
+    Vista para editar una compra existente
+    """
+    usuario_id = request.session.get('usuario_id')
+    
+    try:
+        # Obtener la compra que pertenece al administrador actual
+        compra = Compra.objects.get(cod_com=cod_com, id_adm=usuario_id)
+    except Compra.DoesNotExist:
+        messages.error(request, "La compra no existe o no tiene permisos para editarla.")
+        return redirect('compras')
+    
+    if request.method == 'POST':
         try:
-            # Obtener el ID del administrador actual desde la sesión
-            usuario_id = request.session.get('usuario_id')
-            
-            # Obtener datos del formulario
-            fecha = request.POST.get('fecha')
-            nom_prov = request.POST.get('nom_prov')
-            cantidad = int(request.POST.get('cantidad'))
-            
-            # Formatear correctamente el precio total
-            precio_total_str = request.POST.get('precio_total', '0')
-            # Primero eliminamos todos los puntos (separadores de miles)
-            precio_total_str = precio_total_str.replace('.', '')
-            # Luego reemplazamos la coma decimal por punto (si existe)
-            precio_total_str = precio_total_str.replace(',', '.')
-            # Convertimos a float
-            precio_total = float(precio_total_str)
-            
-            # Determinar el siguiente código de compra para este administrador
-            siguiente_cod_com = 1
-            ultima_compra = Compra.objects.filter(id_adm=usuario_id).order_by('-cod_com').first()
-            if ultima_compra:
-                siguiente_cod_com = ultima_compra.cod_com + 1
-            
-            # Crear la compra
-            compra = Compra.objects.create(
-                cod_com=siguiente_cod_com,
-                id_adm_id=usuario_id,
-                fecha=fecha,
-                nom_prov=nom_prov,
-                cantidad=cantidad,
-                precio_total=precio_total
-            )
-            
-            # Procesar detalles de animales
-            for i in range(1, cantidad + 1):
-                cod_ani = request.POST.get(f'cod_ani_{i}')  # Cambiado de cod_ani_id a cod_ani
-                edad_anicom = request.POST.get(f'edad_aniCom_{i}')
-                peso_ani = request.POST.get(f'peso_ani_{i}')
+            with transaction.atomic():
+                # Obtener datos del formulario
+                fecha = request.POST.get('fecha')
+                nom_prov = request.POST.get('nom_prov')
                 
-                # Formatear correctamente el precio unitario
-                precio_uni_str = request.POST.get(f'precio_uni_{i}', '0')
-                precio_uni_str = precio_uni_str.replace('.', '')  # Eliminar puntos de miles
-                precio_uni_str = precio_uni_str.replace(',', '.')  # Reemplazar coma decimal por punto
-                precio_uni = float(precio_uni_str)
+                # Validar campos obligatorios
+                if not fecha or not nom_prov:
+                    messages.error(request, "La fecha y el nombre del proveedor son obligatorios.")
+                    return redirect('compras')
                 
-                # Crear el detalle de compra
-                DetCom.objects.create(
-                    cod_com=compra,
-                    cod_ani=cod_ani,  # Cambiado de cod_ani_id a cod_ani
-                    edad_anicom=edad_anicom or 0,  # Asignar 0 si no se proporciona
-                    peso_anicom=peso_ani or 0,  # Asignar 0 si no se proporciona
-                    precio_uni=precio_uni
-                )
-            
-            messages.success(request, "Compra registrada exitosamente")
-            return redirect('compras')
+                try:
+                    cantidad = int(request.POST.get('cantidad', 0))
+                    if cantidad <= 0:
+                        messages.error(request, "La cantidad debe ser mayor a 0.")
+                        return redirect('compras')
+                except (ValueError, TypeError):
+                    messages.error(request, "La cantidad debe ser un número válido.")
+                    return redirect('compras')
+                
+                # Formatear correctamente el precio total
+                try:
+                    precio_total_str = request.POST.get('precio_total', '0')
+                    precio_total_str = precio_total_str.replace('.', '')
+                    precio_total_str = precio_total_str.replace(',', '.')
+                    precio_total = float(precio_total_str)
+                    
+                    if precio_total < 0:
+                        messages.error(request, "El precio total no puede ser negativo.")
+                        return redirect('compras')
+                        
+                except (ValueError, TypeError):
+                    messages.error(request, "El precio total debe ser un número válido.")
+                    return redirect('compras')
+                
+                # Actualizar la compra
+                compra.fecha = fecha
+                compra.nom_prov = nom_prov
+                compra.cantidad = cantidad
+                compra.precio_total = precio_total
+                compra.save()
+                
+                # Eliminar detalles existentes
+                DetCom.objects.filter(cod_com=compra).delete()
+                
+                # Crear nuevos detalles
+                detalles_creados = 0
+                errores_detalles = []
+                
+                for i in range(1, cantidad + 1):
+                    cod_ani = request.POST.get(f'cod_ani_{i}')
+                    edad_anicom = request.POST.get(f'edad_aniCom_{i}')
+                    peso_ani = request.POST.get(f'peso_ani_{i}')
+                    precio_uni_str = request.POST.get(f'precio_uni_{i}', '0')
+                    
+                    if not cod_ani:
+                        errores_detalles.append(f"Animal {i}: Código requerido.")
+                        continue
+                    
+                    try:
+                        animal = Animal.objects.get(cod_ani=cod_ani, id_adm=usuario_id)
+                    except Animal.DoesNotExist:
+                        errores_detalles.append(f"Animal {i}: Código {cod_ani} no válido.")
+                        continue
+                    
+                    try:
+                        precio_uni_str = precio_uni_str.replace('.', '')
+                        precio_uni_str = precio_uni_str.replace(',', '.')
+                        precio_uni = float(precio_uni_str)
+                        if precio_uni < 0:
+                            errores_detalles.append(f"Animal {i}: Precio no puede ser negativo.")
+                            continue
+                    except (ValueError, TypeError):
+                        errores_detalles.append(f"Animal {i}: Precio inválido.")
+                        continue
+                    
+                    try:
+                        edad_anicom = int(edad_anicom) if edad_anicom else 0
+                        if edad_anicom < 0:
+                            edad_anicom = 0
+                    except (ValueError, TypeError):
+                        edad_anicom = 0
+                    
+                    try:
+                        peso_ani = float(peso_ani.replace(',', '.')) if peso_ani else 0
+                        if peso_ani < 0:
+                            peso_ani = 0
+                    except (ValueError, TypeError):
+                        peso_ani = 0
+                    
+                    try:
+                        DetCom.objects.create(
+                            cod_com=compra,
+                            cod_ani=cod_ani,
+                            edad_anicom=edad_anicom,
+                            peso_anicom=peso_ani,
+                            precio_uni=precio_uni
+                        )
+                        detalles_creados += 1
+                    except Exception as e:
+                        errores_detalles.append(f"Animal {i}: Error al actualizar.")
+                
+                # Mostrar mensaje según el resultado
+                if detalles_creados == 0:
+                    messages.error(request, "No se pudo actualizar ningún detalle válido.")
+                elif errores_detalles:
+                    warning_msg = f"Compra actualizada. Se procesaron {detalles_creados} de {cantidad} animales."
+                    if len(errores_detalles) <= 2:
+                        warning_msg += " Errores: " + "; ".join(errores_detalles)
+                    messages.warning(request, warning_msg)
+                else:
+                    messages.success(request, "Compra actualizada exitosamente.")
+                
+                return redirect('compras')
+                
         except Exception as e:
-            messages.error(request, f"Error al registrar la compra: {str(e)}")
+            messages.error(request, f"Error al actualizar la compra: {str(e)}")
             return redirect('compras')
+    
     else:
         return redirect('compras')
 
-# Vista API para obtener el siguiente código de animal
 @login_required
 def api_siguiente_codigo_animal(request):
     """API para obtener el siguiente código de animal disponible"""
@@ -1368,23 +1648,26 @@ def api_siguiente_codigo_animal(request):
         import traceback
         print(f"Error en API siguiente_codigo_animal: {str(e)}")
         print(traceback.format_exc())
-        
+        return JsonResponse({'error': 'Error interno del servidor'}, status=500)
+
 @login_required
 def eliminar_compra(request, compra_id):
+    """Vista para eliminar una compra y sus detalles"""
     # Obtener el ID del administrador actual desde la sesión
     usuario_id = request.session.get('usuario_id')
     
     try:
-        # Buscar la compra asegurándose que pertenezca al administrador actual
-        compra = Compra.objects.get(cod_com=compra_id, id_adm=usuario_id)
-        
-        # Primero, eliminar todos los detalles de compra asociados
-        DetCom.objects.filter(cod_com=compra).delete()
-        
-        # Luego, eliminar la compra principal
-        compra.delete()
-        
-        messages.success(request, f"¡Compra #{compra_id} eliminada con éxito!")
+        with transaction.atomic():
+            # Buscar la compra asegurándose que pertenezca al administrador actual
+            compra = Compra.objects.select_for_update().get(cod_com=compra_id, id_adm=usuario_id)
+            
+            # Primero, eliminar todos los detalles de compra asociados
+            detalles_eliminados = DetCom.objects.filter(cod_com=compra).delete()[0]
+            
+            # Luego, eliminar la compra principal
+            compra.delete()
+            
+            messages.success(request, f"Compra #{compra_id} eliminada exitosamente (incluyendo {detalles_eliminados} detalles).")
     
     except Compra.DoesNotExist:
         messages.error(request, "Error: La compra no existe o no tienes permiso para eliminarla.")
@@ -1395,263 +1678,228 @@ def eliminar_compra(request, compra_id):
 
 @login_required
 def compra_pdf(request, compra_id):
-    # Obtener la compra desde la base de datos
-    compra = get_object_or_404(Compra, cod_com=compra_id)
-    
-    # Definir el HTML directamente en el código - solución más sencilla y directa
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <title>Informe de Compra #{compra.cod_com}</title>
-        <style>
-            @page {{
-                size: letter portrait;
-                margin: 1cm 1.5cm; /* Margen reducido */
-            }}
+    """Vista para generar PDF de una compra específica"""
+    try:
+        # Obtener la compra desde la base de datos
+        compra = get_object_or_404(Compra, cod_com=compra_id)
+        
+        # Obtener los detalles de la compra
+        detalles = DetCom.objects.filter(cod_com=compra)
+        
+        # Definir el HTML directamente en el código - solución más sencilla y directa
+        html = f"""
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+            <title>Informe de Compra #{compra.cod_com}</title>
+            <style>
+                @page {{
+                    size: letter portrait;
+                    margin: 1cm 1.5cm; /* Margen reducido */
+                }}
 
-            .footer {{
-                position: fixed;
-                bottom: 0.8cm;
-                width: 100%;
-                text-align: right;
-                font-size: 8pt;
-                color: #666666;
-            }}
+                .footer {{
+                    position: fixed;
+                    bottom: 0.8cm;
+                    width: 100%;
+                    text-align: right;
+                    font-size: 8pt;
+                    color: #666666;
+                }}
 
-            body {{
-                font-family: Helvetica, Arial, sans-serif;
-                font-size: 10pt; /* Tamaño de fuente reducido */
-                color: #000000;
-                margin: 0;
-                padding: 0;
-            }}
+                body {{
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 10pt; /* Tamaño de fuente reducido */
+                    color: #000000;
+                    margin: 0;
+                    padding: 0;
+                }}
 
-            .header {{
-                width: 100%;
-                margin-bottom: 8pt; /* Reducido */
-                padding-top: 0;
-            }}
+                .header {{
+                    width: 100%;
+                    margin-bottom: 8pt; /* Reducido */
+                    padding-top: 0;
+                }}
 
-            .timestamp {{
-                font-size: 8pt;
-                color: #666666;
-                text-align: right;
-            }}
+                .timestamp {{
+                    font-size: 8pt;
+                    color: #666666;
+                    text-align: right;
+                }}
 
-            .title {{
-                font-size: 16pt; /* Reducido */
-                font-weight: bold;
-                text-align: center;
-                margin-top: 0;
-                margin-bottom: 5pt;
-            }}
+                .title {{
+                    font-size: 16pt; /* Reducido */
+                    font-weight: bold;
+                    text-align: center;
+                    margin-top: 0;
+                    margin-bottom: 5pt;
+                }}
 
-            hr {{
-                border: none;
-                border-top: 1px solid #333333;
-                margin: 3pt 0; /* Reducido */
-            }}
+                hr {{
+                    border: none;
+                    border-top: 1px solid #333333;
+                    margin: 3pt 0; /* Reducido */
+                }}
 
-            h2 {{
-                font-size: 12pt; /* Reducido */
-                font-weight: bold;
-                margin-top: 12pt; /* Reducido */
-                margin-bottom: 6pt; /* Reducido */
-                color: #333333;
-            }}
+                h2 {{
+                    font-size: 12pt; /* Reducido */
+                    font-weight: bold;
+                    margin-top: 12pt; /* Reducido */
+                    margin-bottom: 6pt; /* Reducido */
+                    color: #333333;
+                }}
 
-            .info-table {{
-                width: 98%; /* Ligeramente reducido */
-                margin-bottom: 10pt; /* Reducido */
-                border-spacing: 0;
-                font-size: 9pt; /* Reducido */
-            }}
+                .info-table {{
+                    width: 98%; /* Ligeramente reducido */
+                    margin-bottom: 10pt; /* Reducido */
+                    border-spacing: 0;
+                    font-size: 9pt; /* Reducido */
+                }}
 
-            .info-table .label {{
-                font-weight: bold;
-                width: 30%; /* Reducido */
-                padding: 3pt 6pt 3pt 0; /* Reducido */
-                vertical-align: top;
-            }}
+                .info-table .label {{
+                    font-weight: bold;
+                    width: 30%; /* Reducido */
+                    padding: 3pt 6pt 3pt 0; /* Reducido */
+                    vertical-align: top;
+                }}
 
-            .data-table {{
-                width: 98%; /* Ligeramente reducido */
-                border-collapse: collapse;
-                margin-top: 8pt; /* Reducido */
-                font-size: 9pt; /* Reducido */
-            }}
+                .data-table {{
+                    width: 98%; /* Ligeramente reducido */
+                    border-collapse: collapse;
+                    margin-top: 8pt; /* Reducido */
+                    font-size: 9pt; /* Reducido */
+                }}
 
-            .data-table th {{
-                background-color: #f2f2f2;
-                font-weight: bold;
-                text-align: left;
-                padding: 2pt 4pt; /* Reducido */
-                border-bottom: 1pt solid #dddddd;
-            }}
-            
-            .data-table td {{
-                padding: 2pt 4pt; /* Reducido */
-                border-bottom: 1pt solid #dddddd;
-            }}
+                .data-table th {{
+                    background-color: #f2f2f2;
+                    font-weight: bold;
+                    text-align: left;
+                    padding: 2pt 4pt; /* Reducido */
+                    border-bottom: 1pt solid #dddddd;
+                }}
+                
+                .data-table td {{
+                    padding: 2pt 4pt; /* Reducido */
+                    border-bottom: 1pt solid #dddddd;
+                }}
 
-            .footer {{
-                text-align: center;
-                font-size: 8pt; /* Reducido */
-                color: #666666;
-                margin-top: 8pt; /* Reducido */
-            }}
+                .footer {{
+                    text-align: center;
+                    font-size: 8pt; /* Reducido */
+                    color: #666666;
+                    margin-top: 8pt; /* Reducido */
+                }}
 
-            .page-number:before {{
-                content: counter(page);
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1 class="title">Informe de Compra #{compra.cod_com}</h1>
-            <hr>
-        </div>
+                .page-number:before {{
+                    content: counter(page);
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1 class="title">Informe de Compra #{compra.cod_com}</h1>
+                <hr>
+            </div>
 
-        <div class="section">
-            <h2>Información General</h2>
-            
-            <table class="info-table">
-                <tr>
-                    <td class="label">Fecha:</td>
-                    <td>{compra.fecha.strftime('%d/%m/%Y')}</td>
-                </tr>
-                <tr>
-                    <td class="label">Proveedor:</td>
-                    <td>{compra.nom_prov}</td>
-                </tr>
-                <tr>
-                    <td class="label">Cantidad de Animales:</td>
-                    <td>{compra.cantidad}</td>
-                </tr>
-                <tr>
-                    <td class="label">Precio Total:</td>
-                    <td>${compra.precio_total:,.0f}</td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="section">
-            <h2>Detalles de Animales</h2>
-            
-            <table class="data-table">
-                <thead>
+            <div class="section">
+                <h2>Información General</h2>
+                
+                <table class="info-table">
                     <tr>
-                        <th>Código Animal</th>
-                        <th>Edad</th>
-                        <th>Peso</th>
-                        <th>Precio Unitario</th>
+                        <td class="label">Código de Compra:</td>
+                        <td>{compra.cod_com}</td>
                     </tr>
-                </thead>
-                <tbody>
-    """
-    
-    # Añadir filas para cada animal según tu estructura de datos
-    if hasattr(compra, 'detcom_set') and compra.detcom_set.exists():
-        for detalle in compra.detcom_set.all():
-            html += f"""
-                <tr>
-                    <td>{detalle.cod_ani}</td>
-                    <td>{detalle.edad_anicom} meses</td>
-                    <td>{detalle.peso_anicom} kg</td>
-                    <td>${detalle.precio_uni:,.0f}</td>
-                </tr>
-            """
-    else:
-        html += """
-                <tr>
-                    <td colspan="4" style="text-align: center;">No hay animales registrados en esta compra.</td>
-                </tr>
+                    <tr>
+                        <td class="label">Fecha:</td>
+                        <td>{compra.fecha.strftime('%d/%m/%Y')}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Proveedor:</td>
+                        <td>{compra.nom_prov}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Cantidad de Animales:</td>
+                        <td>{compra.cantidad}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Precio Total:</td>
+                        <td>${compra.precio_total:,.0f}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>Detalles de Animales</h2>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Código Animal</th>
+                            <th>Edad (meses)</th>
+                            <th>Peso (kg)</th>
+                            <th>Precio Unitario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
         """
-    
-    # Cerrar el HTML
-    html += """
-                </tbody>
-            </table>
-        </div>
+        
+        # Añadir filas para cada animal
+        if detalles.exists():
+            for detalle in detalles:
+                html += f"""
+                    <tr>
+                        <td>{detalle.cod_ani}</td>
+                        <td>{detalle.edad_anicom}</td>
+                        <td>{detalle.peso_anicom:.1f}</td>
+                        <td>${detalle.precio_uni:,.0f}</td>
+                    </tr>
+                """
+        else:
+            html += """
+                    <tr>
+                        <td colspan="4" style="text-align: center; font-style: italic;">
+                            No hay animales registrados en esta compra.
+                        </td>
+                    </tr>
+            """
+        
+        # Cerrar el HTML
+        html += f"""
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="footer">
-            Página <pdf:pagenumber> de <pdf:pagecount>
-        </div>
-    </body>
-    </html>
-    """
-    
-    # Configurar la respuesta HTTP para el PDF
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="compra_{compra_id}.pdf"'
-    
-    # Crear el PDF
-    pisa_status = pisa.CreatePDF(
-        html,
-        dest=response
-    )
-    
-    # Manejar errores
-    if pisa_status.err:
-        return HttpResponse('Error al generar el PDF', status=500)
-    return response
-
-@login_required
-@transaction.atomic
-def editar_compra(request, cod_com):
-    """
-    Vista para editar una compra existente y sus detalles asociados.
-    """
-    compra = get_object_or_404(Compra, cod_com=cod_com)
-    
-    if request.method == 'POST':
-        try:
-            # Actualizar datos de la compra
-            compra.fecha = request.POST.get('fecha')
-            compra.nom_prov = request.POST.get('nom_prov')
-            
-            # El precio total se calcula a partir de los detalles
-            nuevo_precio_total = 0
-            
-            # Número de detalles en el formulario
-            num_detalles = int(request.POST.get('num_detalles', 0))
-            
-            # Actualizar cada detalle de compra
-            for i in range(num_detalles):
-                # Usar cod_detcom en lugar de id para identificar el detalle
-                detalle_id = request.POST.get(f'detalle_id_{i}')
-                
-                # Buscar el detalle por cod_detcom en lugar de id
-                detalle = get_object_or_404(DetCom, cod_detcom=detalle_id, cod_com=compra)
-                
-                # Actualizar datos del detalle
-                detalle.edad_anicom = request.POST.get(f'edad_anicom_{i}')
-                detalle.peso_anicom = request.POST.get(f'peso_anicom_{i}')
-                detalle.precio_uni = request.POST.get(f'precio_uni_{i}')
-                
-                # Acumular para el precio total
-                nuevo_precio_total += float(detalle.precio_uni)
-                
-                # Guardar el detalle actualizado
-                detalle.save()
-            
-            # Actualizar el precio total de la compra
-            compra.precio_total = nuevo_precio_total
-            compra.save()
-            
-            messages.success(request, f'Compra #{cod_com} actualizada exitosamente.')
+            <div class="footer">
+                <p>Generado el {datetime.now().strftime('%d/%m/%Y a las %H:%M:%S')}</p>
+                Página <pdf:pagenumber> de <pdf:pagecount>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Configurar la respuesta HTTP para el PDF
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="compra_{compra_id}.pdf"'
+        
+        # Crear el PDF
+        pisa_status = pisa.CreatePDF(
+            html,
+            dest=response
+        )
+        
+        # Manejar errores
+        if pisa_status.err:
+            messages.error(request, "Error al generar el PDF.")
             return redirect('compras')
             
-        except Exception as e:
-            messages.error(request, f'Error al actualizar la compra: {str(e)}')
-            return redirect('compras')
+        return response
+        
+    except Exception as e:
+        messages.error(request, f"Error al generar el PDF: {str(e)}")
+        return redirect('compras')
     
-    # Si la solicitud no es POST, redirigir a la lista de compras
-    return redirect('compras')
-
 @login_required
 def cancelar_compra(request):
     """
