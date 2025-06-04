@@ -2566,7 +2566,7 @@ def contacto(request):
         from django.db.models import Q
         
         # Intentar detectar si la búsqueda es por cargo o por nombre
-        if any(cargo in busqueda.lower() for cargo in ['proveedor', 'veterinario', 'comprador']):
+        if any(cargo in busqueda.lower() for cargo in ['proveedor', 'veterinario', 'comprador', 'vacunador']):
             contactos = contactos.filter(cargo__icontains=busqueda)
             tipo_busqueda = "cargo"
         else:
@@ -2598,6 +2598,8 @@ def contacto(request):
             return 'img/veterinario.png'
         elif 'comprador' in cargo:
             return 'img/comprador.png'
+        elif 'vacunador' in cargo:
+            return 'img/vacunador.png'
         # Añade más tipos de cargo según sea necesario
     
     # Enriquecer la consulta de contactos con rutas de imágenes

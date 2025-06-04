@@ -51,6 +51,9 @@
                             <a class="dropdown-item" href="?{% if busqueda %}busqueda={{ busqueda }}&{% endif %}tipo_filtro=Cargo&valor=Comprador">
                                 <b>Comprador</b>
                             </a>
+                            <a class="dropdown-item" href="?{% if busqueda %}busqueda={{ busqueda }}&{% endif %}tipo_filtro=Cargo&valor=Vacunador">
+                                <b>Vacunador</b>
+                            </a>
                             <a class="dropdown-item" href="{% url 'contacto' %}">
                                 <b>Limpiar filtros</b>
                             </a>
@@ -167,6 +170,7 @@
                                                 <option value="Proveedor">Proveedor</option>
                                                 <option value="Comprador">Comprador</option>
                                                 <option value="Veterinario">Veterinario</option>
+                                                <option value="Vacunador">Vacunador</option>
                                             </select>
                                         </div> 
                                         <div class="mb-3">
@@ -214,6 +218,7 @@
                                 <option value="Proveedor">Proveedor</option>
                                 <option value="Comprador">Comprador</option>
                                 <option value="Veterinario">Veterinario</option>
+                                <option value="Vacunador">Vacunador</option>
                             </select>
                         </div> 
                         <div class="mb-3">
