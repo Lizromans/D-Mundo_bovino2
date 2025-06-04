@@ -35,7 +35,6 @@ urlpatterns = [
     path('eliminar-documento/<int:documento_id>/', views.eliminar_documento, name='eliminar_documento'),
     path('compras/', views.compras, name='compras'),
     path('crear_compra/', views.crear_compra, name='crear_compra'),
-    path('api/siguiente-codigo-animal/', views.api_siguiente_codigo_animal, name='api_siguiente_codigo_animal'),
     path('eliminar_compra/<int:compra_id>/', views.eliminar_compra, name='eliminar_compra'),
     path('cancelar_compra/', views.cancelar_compra, name='cancelar_compra'), 
     path('editar-compra/<int:cod_com>/', views.editar_compra, name='editar_compra'),

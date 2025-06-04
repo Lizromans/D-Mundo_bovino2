@@ -128,7 +128,7 @@ class Animal(models.Model):
 
 
 class Compra(models.Model):
-    cod_com = models.AutoField(primary_key=True)
+    cod_com = models.IntegerField(primary_key=True)
     nom_prov = models.CharField(max_length=255)
     cantidad = models.IntegerField()
     fecha = models.DateField()
@@ -155,11 +155,11 @@ class Contacto(models.Model):
 
 
 class DetCom(models.Model):
-    cod_detcom = models.AutoField(primary_key=True)
+    cod_detcom = models.IntegerField(primary_key=True)
     cod_com= models.ForeignKey('Compra', models.DO_NOTHING, db_column='cod_com')
     cod_ani = models.IntegerField(255)
-    edad_anicom = models.IntegerField(255)
-    peso_anicom = models.FloatField(db_column='peso_aniCom')  # Field name made lowercase.
+    edad_anicom = models.IntegerField(null=True, blank=True)
+    peso_anicom = models.FloatField(null=True, blank=True, db_column='peso_aniCom')
     precio_uni = models.FloatField()
     
     class Meta:

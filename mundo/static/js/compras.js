@@ -69,15 +69,8 @@ async function actualizarFormularioAnimales() {
         animalDiv.classList.add('card', 'mb-3', 'p-3');
         animalDiv.dataset.animal = i; // Añadir data attribute para seguimiento
 
-        // Añadir una advertencia si estamos en modo de respaldo
-        const advertenciaHTML = modoRespaldo ? 
-            `<div class="alert alert-warning mb-2">
-                <small>Código temporal. Se asignará el código definitivo al guardar.</small>
-            </div>` : '';
-
         animalDiv.innerHTML = `
             <h5 class="card-title">Animal #${i}</h5>
-            ${advertenciaHTML}
             <div class="row">
                 <div class="col-md-4">
                     <label for="cod_ani_${i}">Código:</label>
@@ -96,7 +89,7 @@ async function actualizarFormularioAnimales() {
                            step="0.01" min="0" required onchange="calcularPrecioTotal()">
                 </div>
                 <div class="col-md-6">
-                    <label for="precio_uni_${i}">Precio:</label>
+                    <label for="precio_uni_${i}">Precio por animal:</label>
                     <div class="input-group">
                         <span class="input-group-text">$</span>
                         <input type="text" id="precio_uni_${i}" name="precio_uni_${i}" class="form-control" 
@@ -147,6 +140,24 @@ async function obtenerSiguienteCodigoAnimal() {
         // Verificar si la respuesta fue exitosa
         if (!response.ok) {
             console.error('Error en la respuesta del servidor:', response.status, response.statusText);
+            
+            // Intentar obtener el texto de error del servidor
+            try {
+                const errorText = await response.text();
+                console.error('Respuesta del servidor:', errorText);
+            } catch (e) {
+                console.error('No se pudo leer la respuesta de error');
+            }
+            
+            return null;
+        }
+
+        // Verificar si la respuesta es JSON válido
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('La respuesta no es JSON válido. Content-Type:', contentType);
+            const responseText = await response.text();
+            console.error('Contenido de la respuesta:', responseText);
             return null;
         }
 
@@ -156,14 +167,29 @@ async function obtenerSiguienteCodigoAnimal() {
         // Verificar si la respuesta contiene el código esperado
         if (data && data.siguiente_codigo !== undefined) {
             const codigo = parseInt(data.siguiente_codigo);
+            
+            // Validar que el código sea un número válido
+            if (isNaN(codigo) || codigo < 1) {
+                console.error('Código recibido no es válido:', codigo);
+                return null;
+            }
+            
             console.log(`Código convertido a entero: ${codigo}`);
             return codigo;
         } else {
-            console.error('Respuesta del servidor incorrecta:', data);
+            console.error('Respuesta del servidor incorrecta - no contiene siguiente_codigo:', data);
             return null;
         }
     } catch (error) {
         console.error('Error al obtener el siguiente código:', error);
+        
+        // Log adicional para diferentes tipos de errores
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            console.error('Error de conectividad. Verificar que el servidor esté ejecutándose.');
+        } else if (error.name === 'SyntaxError') {
+            console.error('Error de sintaxis JSON. La respuesta del servidor no es JSON válido.');
+        }
+        
         return null;
     }
 }
@@ -213,17 +239,15 @@ function calcularPrecioTotal() {
 // Función para probar manualmente la API (útil para depuración)
 function probarAPI() {
     console.log('Probando API manualmente...');
-    fetch('/api/siguiente-codigo-animal/')
-        .then(response => {
-            console.log('Estado de respuesta:', response.status);
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
+    obtenerSiguienteCodigoAnimal()
+        .then(codigo => {
+            if (codigo !== null) {
+                console.log('Código recibido exitosamente:', codigo);
+                alert(`Código recibido: ${codigo}`);
+            } else {
+                console.log('No se pudo obtener el código');
+                alert('Error: No se pudo obtener el código de la API');
             }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Datos recibidos:', data);
-            alert(`Código recibido: ${data.siguiente_codigo}`);
         })
         .catch(error => {
             console.error('Error en la prueba:', error);
@@ -270,6 +294,34 @@ function verificarEstructuraHTML() {
     console.log('--- Fin de verificación HTML ---');
 }
 
+// Función para recalcular el precio total de una compra en edición
+function recalcularPrecioTotal(compraId) {
+    const modal = document.getElementById('editModal-' + compraId);
+    if (!modal) {
+        console.error(`No se encontró el modal para compra ${compraId}`);
+        return;
+    }
+
+    let total = 0;
+    
+    // Sumar todos los precios unitarios
+    modal.querySelectorAll('.precio-uni-edit').forEach(input => {
+        // Eliminar formato para obtener el valor numérico
+        const precioTexto = input.value.replace(/[^\d]/g, '');
+        const precio = parseFloat(precioTexto) || 0;
+        total += precio;
+    });
+    
+    // Actualizar el precio total
+    const precioTotalInput = document.getElementById('precio_total-edit-' + compraId);
+    if (precioTotalInput) {
+        precioTotalInput.value = total.toLocaleString('es-CO');
+        console.log(`Precio total actualizado para compra ${compraId}: ${precioTotalInput.value}`);
+    } else {
+        console.error(`No se encontró el campo precio_total-edit-${compraId}`);
+    }
+}
+
 // Inicializar el formulario
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM cargado. Inicializando formulario...');
@@ -310,6 +362,26 @@ document.addEventListener('DOMContentLoaded', function() {
         nuevoBoton.addEventListener('click', probarAPI);
     }
 
+    // --- FUNCIONALIDAD PARA EDITAR COMPRAS ---
+    
+    // Escuchar cambios en los precios unitarios para recalcular el precio total en formularios de edición
+    document.querySelectorAll('.precio-uni-edit').forEach(input => {
+        input.addEventListener('change', function() {
+            const compraId = this.getAttribute('data-compra');
+            if (compraId) {
+                recalcularPrecioTotal(compraId);
+            } else {
+                console.error('No se encontró data-compra en el input:', this);
+            }
+        });
+    });
+    
+    // Inicializar todos los modales de edición con sus totales correctos
+    document.querySelectorAll('[id^="editModal-"]').forEach(modal => {
+        const compraId = modal.id.replace('editModal-', '');
+        recalcularPrecioTotal(compraId);
+    });
+
     // Ejecutar la actualización inicial del formulario
     console.log('Iniciando actualización inicial del formulario');
     actualizarFormularioAnimales();
@@ -328,34 +400,3 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error(`¡ALERTA! Se encontraron ${contadorComprasJS} scripts de compras.js incluidos`);
     }
 });
-
-// --- NUEVA FUNCIONALIDAD PARA EDITAR COMPRAS ---
-    
-    // Escuchar cambios en los precios unitarios para recalcular el precio total en formularios de edición
-    document.querySelectorAll('.precio-uni-edit').forEach(input => {
-        input.addEventListener('change', function() {
-            const compraId = this.getAttribute('data-compra');
-            recalcularPrecioTotal(compraId);
-        });
-    });
-    
-    // Función para recalcular el precio total de una compra en edición
-    function recalcularPrecioTotal(compraId) {
-        const modal = document.getElementById('editModal-' + compraId);
-        let total = 0;
-        
-        // Sumar todos los precios unitarios
-        modal.querySelectorAll('.precio-uni-edit').forEach(input => {
-            total += parseFloat(input.value || 0);
-        });
-        
-        // Actualizar el precio total
-        const precioTotalInput = document.getElementById('precio_total-edit-' + compraId);
-        precioTotalInput.value = total.toFixed(0);
-    }
-    
-    // Inicializar todos los modales de edición con sus totales correctos
-    document.querySelectorAll('[id^="editModal-"]').forEach(modal => {
-        const compraId = modal.id.replace('editModal-', '');
-        recalcularPrecioTotal(compraId);
-    });
