@@ -538,7 +538,11 @@ button {
     .col-12{
     position: relative;
     margin-top: 4.5%;
-    margin-bottom: 22%;
+    margin-bottom: 22.8%;
+    }
+
+    .fichas-container{
+        margin-bottom: 5.1%;
     }
 }
 

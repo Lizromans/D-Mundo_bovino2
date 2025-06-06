@@ -343,15 +343,30 @@ def configuraciones(request):
         admin = Administrador.objects.get(pk=usuario_id)
         
         if request.method == 'POST':
-            admin.nom_usu = request.POST.get('usuario', admin.nom_usu)
-            admin.correo = request.POST.get('correo', admin.correo)
+            admin.nom_usu = request.POST.get('nom_usu', admin.nom_usu)
+            admin.correo = request.POST.get('email', admin.correo)
             admin.save()
+            
+            request.session['modulo_inventario'] = 'inventario' in request.POST
+            request.session['modulo_ventas'] = 'registroVentas' in request.POST
+            request.session['modulo_calendario'] = 'calendario' in request.POST
+            request.session['modulo_documentos'] = 'documentos' in request.POST
+            request.session['modulo_agenda'] = 'contactos' in request.POST
             
             messages.success(request, "¡Cambios guardados correctamente!")
             return redirect('configuraciones')
         
+        perfil = {
+            'modulo_inventario': request.session.get('modulo_inventario', True),
+            'modulo_ventas': request.session.get('modulo_ventas', True),
+            'modulo_calendario': request.session.get('modulo_calendario', True),
+            'modulo_documentos': request.session.get('modulo_documentos', True),
+            'modulo_agenda': request.session.get('modulo_agenda', True)
+        }
+        
         return render(request, 'paginas/configuraciones.html', {
             'admin': admin,
+            'perfil': perfil,
             'current_page': 'configuraciones',
             'current_page_name': 'Configuraciones'
         })
