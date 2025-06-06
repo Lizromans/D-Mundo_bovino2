@@ -116,7 +116,7 @@ class Animal(models.Model):
     cod_ani = models.IntegerField()  # ID específico por usuario
     fecha = models.DateField()
     edad = models.CharField(max_length=255)
-    peso = models.FloatField()
+    peso = models.FloatField(null=True, blank=True)
     raza = models.CharField(max_length=45)
     estado = models.CharField(max_length=45)
     id_adm = models.ForeignKey(Administrador, models.DO_NOTHING, db_column='id_adm')
