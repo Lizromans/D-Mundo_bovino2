@@ -12,7 +12,7 @@ class AnimalAdmin(admin.ModelAdmin):
 admin.site.register(Animal, AnimalAdmin)
 
 class DetComAdmin(admin.ModelAdmin):
-    list_display = ("cod_detcom", "cod_com", "peso_anicom", "precio_uni")
+    list_display = ("cod_detcom", "cod_com", "peso_aniCom","edad_aniCom", "precio_uni")
 admin.site.register(DetCom, DetComAdmin)
 
 class CompraAdmin(admin.ModelAdmin):

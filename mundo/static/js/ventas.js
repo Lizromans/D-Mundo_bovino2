@@ -55,13 +55,18 @@ function actualizarFormularioAnimales() {
                 </div>
                 <div class="col-md-8">
                     <label for="edad_aniven_${i}">Edad:</label>
-                    <input type="number" id="edad_aniven_${i}" name="edad_aniven_${i}" class="form-control" required>
+                    <select id="edad_aniven_${i}" name="edad_aniven_${i}" class="form-control" required>
+                        <option value=""disabled>Seleccione una edad</option>
+                        <option value="1-2">1 - 2 años</option>
+                        <option value="2-3">2 - 3 años</option>
+                        <option value="3-4">3 - 4 años</option>
+                    </select>
                 </div>
             </div>
             <div class="row mt-2">
                 <div class="col-md-6">
-                    <label for="peso_ani_${i}">Peso (kg):</label>
-                    <input type="number" id="peso_ani_${i}" name="peso_ani_${i}" class="form-control" 
+                    <label for="peso_aniven_${i}">Peso (kg):</label>
+                    <input type="number" id="peso_aniven_${i}" name="peso_aniven_${i}" class="form-control" 
                            step="0.01" min="0" required onchange="calcularPrecioTotal()">
                 </div>
                 <div class="col-md-6">

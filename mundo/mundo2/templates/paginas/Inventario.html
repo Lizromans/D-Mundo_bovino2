@@ -190,7 +190,12 @@
                                             </div>
                                             <div class="mb-3">
                                                 <label for="edad_edit" class="form-label">Edad:</label>
-                                                <input type="number" class="form-control" id="edad_edit" name="edad" value="{{ animal.edad }}" required>
+                                                <select class="form-select" id="edad_edit" name="edad" required>
+                                                    <option value="" disabled>Selecciona una edad</option>
+                                                    <option value="1-2" {% if animal.edad == "1-2" %}selected{% endif %}>1 - 2 año</option>
+                                                    <option value="2-3" {% if animal.edad == "2-3" %}selected{% endif %}>2 - 3 años</option> 
+                                                    <option value="3-4" {% if animal.edad == "3-4" %}selected{% endif %}>3 - 4 años</option>                                                   
+                                                </select>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="peso_edit" class="form-label">Peso:</label>
@@ -252,7 +257,12 @@
                         </div>
                         <div class="mb-3">
                             <label for="edad" class="form-label">Edad:</label>
-                            <input type="number" class="form-control" id="edad" name="edad" required>
+                            <select class="form-select" id="edad" name="edad" required>
+                                <option value="" disabled selected>Selecciona una edad</option>
+                                <option value="1-2">1 - 2 años</option>
+                                <option value="2-3">2 - 3 años</option>
+                                <option value="3-4">3 - 4 años</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="peso" class="form-label">Peso:</label>

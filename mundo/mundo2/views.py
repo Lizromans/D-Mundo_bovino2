@@ -554,7 +554,7 @@ def registrar_animal(request):
             fecha_str = request.POST.get("fecha")
             # Convertir a objeto datetime completo
             fecha = datetime.strptime(fecha_str, '%Y-%m-%d')  # o el formato que uses
-            edad = int(request.POST.get("edad"))
+            edad = str(request.POST.get("edad"))
             peso = float(request.POST.get("peso"))
             raza = request.POST.get("raza")
             estado = request.POST.get("estado")
@@ -1263,13 +1263,13 @@ def crear_compra(request):
             # Convertimos a float
             precio_total = float(precio_total_str)
             
-            # Determinar el siguiente código de venta para este administrador
+            # Determinar el siguiente código de compra para este administrador
             siguiente_cod_com = 1
             ultima_compra = Compra.objects.filter(id_adm=usuario_id).order_by('-cod_com').first()
             if ultima_compra:
                 siguiente_cod_com = ultima_compra.cod_com + 1
             
-            # Crear la venta
+            # Crear la compra
             compra = Compra.objects.create(
                 cod_com=siguiente_cod_com,
                 id_adm_id=usuario_id,
@@ -1282,9 +1282,14 @@ def crear_compra(request):
             # Procesar detalles de animales
             for i in range(1, cantidad + 1):
                 # Obtener valores con validación
-                cod_ani = request.POST.get(f'cod_ani_{i}')
-                edad_anicom = request.POST.get(f'edad_aniCom_{i}')
-                peso_anicom = request.POST.get(f'peso_aniCom_{i}')
+                cod_ani = request.POST.get(f'cod_ani_{i}', '')
+                edad_aniCom = request.POST.get(f'edad_aniCom_{i}', '0')
+                peso_aniCom = request.POST.get(f'peso_aniCom_{i}', '0')
+                
+                # Asegurar que los campos no sean None o cadenas vacías
+                if not cod_ani:
+                    messages.error(request, f"Código de animal es requerido para el animal {i}")
+                    continue
                 
                 # Formatear correctamente el precio unitario
                 precio_uni_str = request.POST.get(f'precio_uni_{i}', '0')
@@ -1296,8 +1301,8 @@ def crear_compra(request):
                 DetCom.objects.create(
                     cod_com=compra,
                     cod_ani=cod_ani,
-                    edad_anicom=edad_anicom or 0,  # Valor por defecto 0 si está vacío
-                    peso_anicom=peso_anicom or 0,  # Valor por defecto 0 si está vacío
+                    edad_aniCom=edad_aniCom or 0,  # Valor por defecto 0 si está vacío
+                    peso_aniCom=peso_aniCom or 0,  # Valor por defecto 0 si está vacío
                     precio_uni=precio_uni,
                 )
             
@@ -1308,7 +1313,7 @@ def crear_compra(request):
             return redirect('compras')
     else:
         return redirect('compras')
-      
+       
 @login_required
 def editar_compra(request, cod_com):
     """
@@ -1445,26 +1450,7 @@ def editar_compra(request, cod_com):
     
     else:
         return redirect('compras')
-
-@login_required
-def api_siguiente_codigo_animal(request):
-    """API para obtener el siguiente código de animal disponible"""
-    try:
-        # Buscar el último animal en la base de datos
-        ultimo_animal = Animal.objects.all().order_by('-cod_ani').first()
-        siguiente_codigo = 1 if not ultimo_animal else ultimo_animal.cod_ani + 1
-        
-        # Registrar información de depuración
-        print(f"Último código encontrado: {ultimo_animal.cod_ani if ultimo_animal else 'Ninguno'}")
-        print(f"Siguiente código asignado: {siguiente_codigo}")
-        
-        return JsonResponse({'siguiente_codigo': siguiente_codigo})
-    except Exception as e:
-        # Registrar el error para depuración
-        import traceback
-        print(f"Error en API siguiente_codigo_animal: {str(e)}")
-        print(traceback.format_exc())
-
+       
 @login_required
 def eliminar_compra(request, compra_id):
     """Vista para eliminar una compra y sus detalles"""
@@ -1482,7 +1468,7 @@ def eliminar_compra(request, compra_id):
             # Luego, eliminar la compra principal
             compra.delete()
             
-            messages.success(request, f"Compra #{compra_id} eliminada exitosamente (incluyendo {detalles_eliminados} detalles).")
+            messages.success(request, f"Compra eliminada exitosamente.")
     
     except Compra.DoesNotExist:
         messages.error(request, "Error: La compra no existe o no tienes permiso para eliminarla.")
@@ -1652,8 +1638,8 @@ def compra_pdf(request, compra_id):
                     <thead>
                         <tr>
                             <th>Código Animal</th>
-                            <th>Edad (meses)</th>
-                            <th>Peso (kg)</th>
+                            <th>Edad </th>
+                            <th>Peso </th>
                             <th>Precio Unitario</th>
                         </tr>
                     </thead>
@@ -1666,8 +1652,8 @@ def compra_pdf(request, compra_id):
                 html += f"""
                     <tr>
                         <td>{detalle.cod_ani}</td>
-                        <td>{detalle.edad_anicom}</td>
-                        <td>{detalle.peso_anicom:.1f}</td>
+                        <td>{detalle.edad_aniCom} años</td>
+                        <td>{detalle.peso_aniCom:.1f} kg</td>
                         <td>${detalle.precio_uni:,.0f}</td>
                     </tr>
                 """
@@ -1893,7 +1879,7 @@ def editar_venta(request, cod_ven):
             venta.precio_total = nuevo_precio_total
             venta.save()
             
-            messages.success(request, f'Venta #{cod_ven} actualizada exitosamente.')
+            messages.success(request, f'Venta actualizada exitosamente.')
             return redirect('ventas')
             
         except Exception as e:
@@ -1918,7 +1904,7 @@ def eliminar_venta(request, venta_id):
         # Luego, eliminar la venta principal
         venta.delete()
         
-        messages.success(request, f"¡Venta #{venta_id} eliminada con éxito!")
+        messages.success(request, f"¡Venta eliminada con éxito!")
     
     except Venta.DoesNotExist:  # Corregido de Compra.DoesNotExist
         messages.error(request, "Error: La venta no existe o no tienes permiso para eliminarla.")
@@ -2080,7 +2066,7 @@ def venta_pdf(request, venta_id):
                     <tr>
                         <th>Código Animal</th>
                         <th>Edad</th>
-                        <th>Peso</th>
+                        <th>Peso(kg)</th>
                         <th>Precio Unitario</th>
                     </tr>
                 </thead>
@@ -2093,7 +2079,7 @@ def venta_pdf(request, venta_id):
             html += f"""
                 <tr>
                     <td>{detalle.cod_ani}</td>
-                    <td>{detalle.edad_aniven} meses</td>
+                    <td>{detalle.edad_aniven} años</td>
                     <td>{detalle.peso_aniven} kg</td>
                     <td>${detalle.precio_uni:,.0f}</td>
                 </tr>

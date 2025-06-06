@@ -168,7 +168,7 @@
                                                     <thead>
                                                         <tr>
                                                             <th>Código Animal</th>
-                                                            <th>Edad (meses)</th>
+                                                            <th>Edad (años)</th>
                                                             <th>Peso (kg)</th>
                                                             <th>Precio Unitario ($)</th>
                                                         </tr>
@@ -181,7 +181,7 @@
                                                                 <input type="hidden" name="detalle_id_{{ forloop.counter0 }}" value="{{ detalle.cod_detven }}">
                                                             </td>
                                                             <td>
-                                                                <input type="number" name="edad_aniven_{{ forloop.counter0 }}" class="form-control edad-edit" value="{{ detalle.edad_aniven }}" min="1" required>
+                                                                <input type="text" name="edad_aniven_{{ forloop.counter0 }}" class="form-control edad-edit" value="{{ detalle.edad_aniven }}" min="1" required>
                                                             </td>
                                                             <td>
                                                                 <input type="number" name="peso_aniven_{{ forloop.counter0 }}" class="form-control peso-edit" value="{{ detalle.peso_aniven }}" min="1" step="0.01" required>
@@ -258,7 +258,7 @@
                                                     {% for detalle in venta.detalles.all %}
                                                         <tr>
                                                             <td>{{ detalle.cod_ani }}</td>
-                                                            <td>{{ detalle.edad_aniven }} meses</td>
+                                                            <td>{{ detalle.edad_aniven }} años</td>
                                                             <td>{{ detalle.peso_aniven }} kg</td>
                                                             <td>${{ detalle.precio_uni|floatformat:0|intcomma }}</td>
                                                         </tr>
@@ -275,7 +275,6 @@
                                         <a href="{% url 'venta_pdf' venta.cod_ven %}" class="btn">
                                             <i class="fas fa-print"></i> Descargar Informe
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
                                     </div>
                                 </div>
                             </div>

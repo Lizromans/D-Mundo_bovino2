@@ -2,7 +2,7 @@
 let contadorActualizaciones = 0;
 
 // Función para actualizar el formulario de animales basado en la cantidad
-async function actualizarFormularioAnimales() {
+function actualizarFormularioAnimales() {
     // Contador para depuración
     contadorActualizaciones++;
     console.log(`Llamada #${contadorActualizaciones} a actualizarFormularioAnimales`);
@@ -36,33 +36,14 @@ async function actualizarFormularioAnimales() {
         return;
     }
 
-    // Variable para indicar si estamos en modo de respaldo (fallback)
-    let modoRespaldo = false;
-    let siguienteCodigo;
-
-    try {
-        // Obtener el siguiente código de animal desde la API
-        console.log('Intentando obtener código desde la API...');
-        siguienteCodigo = await obtenerSiguienteCodigoAnimal();
-        console.log(`Código obtenido: ${siguienteCodigo}`);
-
-        // Si no se obtuvo un código válido, usar modo de respaldo
-        if (siguienteCodigo === null) {
-            console.warn('Usando modo de respaldo para generar códigos temporales');
-            siguienteCodigo = 1;
-            modoRespaldo = true;
-        }
-    } catch (error) {
-        console.error('Error al obtener código:', error);
-        siguienteCodigo = 1;
-        modoRespaldo = true;
-    }
+    // Generar código inicial simple (puede ser modificado según necesidades)
+    let siguienteCodigo = 1;
 
     // Generar campos para cada animal
     console.log(`Generando ${cantidad} campos con código inicial ${siguienteCodigo}`);
 
     for (let i = 1; i <= cantidad; i++) {
-        const codigoActual = siguienteCodigo++;
+        const codigoActual = siguienteCodigo + (i - 1);
         console.log(`Generando campo para animal #${i} con código ${codigoActual}`);
 
         const animalDiv = document.createElement('div');
@@ -74,18 +55,22 @@ async function actualizarFormularioAnimales() {
             <div class="row">
                 <div class="col-md-4">
                     <label for="cod_ani_${i}">Código:</label>
-                    <input type="number" id="cod_ani_${i}" name="cod_ani_${i}" class="form-control" 
-                           value="${codigoActual}" ${modoRespaldo ? '' : 'readonly'}>
+                    <input type="number" id="cod_ani_${i}" name="cod_ani_${i}" class="form-control" value="${codigoActual}">
                 </div>
                 <div class="col-md-8">
                     <label for="edad_aniCom_${i}">Edad:</label>
-                    <input type="number" id="edad_aniCom_${i}" name="edad_aniCom_${i}" class="form-control" required>
+                    <select id="edad_aniCom_${i}" name="edad_aniCom_${i}" class="form-control" required>
+                        <option value="" disabled>Seleccione una edad</option>
+                        <option value="1-2">1 - 2 años</option>
+                        <option value="2-3">2 - 3 años</option>
+                        <option value="3-4">3 - 4 años</option>
+                    </select>
                 </div>
             </div>
             <div class="row mt-2">
                 <div class="col-md-6">
-                    <label for="peso_ani_${i}">Peso (kg):</label>
-                    <input type="number" id="peso_ani_${i}" name="peso_ani_${i}" class="form-control" 
+                    <label for="peso_aniCom_${i}">Peso (kg):</label>
+                    <input type="number" id="peso_aniCom_${i}" name="peso_aniCom_${i}" class="form-control" 
                            step="0.01" min="0" required onchange="calcularPrecioTotal()">
                 </div>
                 <div class="col-md-6">
@@ -131,77 +116,18 @@ async function actualizarFormularioAnimales() {
     }
 }
 
-// Función para obtener el siguiente código de animal desde el servidor
-async function obtenerSiguienteCodigoAnimal() {
-    try {
-        console.log('Iniciando solicitud a la API...');
-        const response = await fetch('/api/siguiente-codigo-animal/');
-
-        // Verificar si la respuesta fue exitosa
-        if (!response.ok) {
-            console.error('Error en la respuesta del servidor:', response.status, response.statusText);
-            
-            // Intentar obtener el texto de error del servidor
-            try {
-                const errorText = await response.text();
-                console.error('Respuesta del servidor:', errorText);
-            } catch (e) {
-                console.error('No se pudo leer la respuesta de error');
-            }
-            
-            return null;
-        }
-
-        // Verificar si la respuesta es JSON válido
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.error('La respuesta no es JSON válido. Content-Type:', contentType);
-            const responseText = await response.text();
-            console.error('Contenido de la respuesta:', responseText);
-            return null;
-        }
-
-        const data = await response.json();
-        console.log('Datos recibidos de la API:', data);
-
-        // Verificar si la respuesta contiene el código esperado
-        if (data && data.siguiente_codigo !== undefined) {
-            const codigo = parseInt(data.siguiente_codigo);
-            
-            // Validar que el código sea un número válido
-            if (isNaN(codigo) || codigo < 1) {
-                console.error('Código recibido no es válido:', codigo);
-                return null;
-            }
-            
-            console.log(`Código convertido a entero: ${codigo}`);
-            return codigo;
-        } else {
-            console.error('Respuesta del servidor incorrecta - no contiene siguiente_codigo:', data);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error al obtener el siguiente código:', error);
-        
-        // Log adicional para diferentes tipos de errores
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
-            console.error('Error de conectividad. Verificar que el servidor esté ejecutándose.');
-        } else if (error.name === 'SyntaxError') {
-            console.error('Error de sintaxis JSON. La respuesta del servidor no es JSON válido.');
-        }
-        
-        return null;
-    }
-}
-
 // Función para formatear los valores a pesos colombianos
 function formatearPrecioCOP(input) {
     let valor = input.value.replace(/[^\d]/g, '');
     if (valor) {
         // Convertir a número
         let numero = parseInt(valor);
-        // Formatear con separadores de miles
-        input.value = numero.toLocaleString('es-CO');
+        if (!isNaN(numero) && numero >= 0) {
+            // Formatear con separadores de miles
+            input.value = numero.toLocaleString('es-CO');
+        } else {
+            input.value = '';
+        }
     }
 }
 
@@ -236,23 +162,32 @@ function calcularPrecioTotal() {
     }
 }
 
-// Función para probar manualmente la API (útil para depuración)
-function probarAPI() {
-    console.log('Probando API manualmente...');
-    obtenerSiguienteCodigoAnimal()
-        .then(codigo => {
-            if (codigo !== null) {
-                console.log('Código recibido exitosamente:', codigo);
-                alert(`Código recibido: ${codigo}`);
-            } else {
-                console.log('No se pudo obtener el código');
-                alert('Error: No se pudo obtener el código de la API');
-            }
-        })
-        .catch(error => {
-            console.error('Error en la prueba:', error);
-            alert(`Error al probar API: ${error.message}`);
-        });
+// Función para recalcular el precio total de una compra en edición
+function recalcularPrecioTotal(compraId) {
+    const modal = document.getElementById('editModal-' + compraId);
+    if (!modal) {
+        console.error(`No se encontró el modal para compra ${compraId}`);
+        return;
+    }
+
+    let total = 0;
+    
+    // Sumar todos los precios unitarios
+    modal.querySelectorAll('.precio-uni-edit').forEach(input => {
+        // Eliminar formato para obtener el valor numérico
+        const precioTexto = input.value.replace(/[^\d]/g, '');
+        const precio = parseFloat(precioTexto) || 0;
+        total += precio;
+    });
+    
+    // Actualizar el precio total
+    const precioTotalInput = document.getElementById('precio_total-edit-' + compraId);
+    if (precioTotalInput) {
+        precioTotalInput.value = total.toLocaleString('es-CO');
+        console.log(`Precio total actualizado para compra ${compraId}: ${precioTotalInput.value}`);
+    } else {
+        console.error(`No se encontró el campo precio_total-edit-${compraId}`);
+    }
 }
 
 // Función para verificar la estructura HTML
@@ -294,32 +229,9 @@ function verificarEstructuraHTML() {
     console.log('--- Fin de verificación HTML ---');
 }
 
-// Función para recalcular el precio total de una compra en edición
-function recalcularPrecioTotal(compraId) {
-    const modal = document.getElementById('editModal-' + compraId);
-    if (!modal) {
-        console.error(`No se encontró el modal para compra ${compraId}`);
-        return;
-    }
-
-    let total = 0;
-    
-    // Sumar todos los precios unitarios
-    modal.querySelectorAll('.precio-uni-edit').forEach(input => {
-        // Eliminar formato para obtener el valor numérico
-        const precioTexto = input.value.replace(/[^\d]/g, '');
-        const precio = parseFloat(precioTexto) || 0;
-        total += precio;
-    });
-    
-    // Actualizar el precio total
-    const precioTotalInput = document.getElementById('precio_total-edit-' + compraId);
-    if (precioTotalInput) {
-        precioTotalInput.value = total.toLocaleString('es-CO');
-        console.log(`Precio total actualizado para compra ${compraId}: ${precioTotalInput.value}`);
-    } else {
-        console.error(`No se encontró el campo precio_total-edit-${compraId}`);
-    }
+// Función para manejar errores de forma centralizada
+function manejarError(error, contexto = '') {
+    console.error(`Error${contexto ? ' en ' + contexto : ''}:`, error);
 }
 
 // Inicializar el formulario
@@ -329,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verificar estructura HTML
     verificarEstructuraHTML();
 
-    // Eliminar event listeners existentes para evitar duplicación
+    // Configurar event listener para el campo de cantidad
     const cantidadInput = document.getElementById('cantidad');
     if (cantidadInput) {
         console.log('Configurando event listener al campo de cantidad');
@@ -341,25 +253,28 @@ document.addEventListener('DOMContentLoaded', function() {
         // Agregar event listener al nuevo elemento
         nuevoInput.addEventListener('change', function(event) {
             console.log(`Campo de cantidad cambió a: ${event.target.value}`);
-            actualizarFormularioAnimales();
+            try {
+                actualizarFormularioAnimales();
+            } catch (error) {
+                manejarError(error, 'actualizarFormularioAnimales');
+            }
+        });
+
+        // También escuchar el evento 'input' para cambios en tiempo real
+        nuevoInput.addEventListener('input', function(event) {
+            // Debounce para evitar demasiadas llamadas
+            clearTimeout(window.inputTimeout);
+            window.inputTimeout = setTimeout(() => {
+                console.log(`Campo de cantidad cambió (input) a: ${event.target.value}`);
+                try {
+                    actualizarFormularioAnimales();
+                } catch (error) {
+                    manejarError(error, 'actualizarFormularioAnimales (input)');
+                }
+            }, 500);
         });
     } else {
         console.error('No se encontró el campo de cantidad');
-    }
-
-    // Verificar si hay botones duplicados para la API
-    const botonesAPI = document.querySelectorAll('[id="btn_probar_api"]');
-    if (botonesAPI.length > 1) {
-        console.warn(`Se encontraron ${botonesAPI.length} botones para probar la API`);
-    }
-
-    // Si hay un botón para probar la API, añadir el event listener
-    const btnProbarAPI = document.getElementById('btn_probar_api');
-    if (btnProbarAPI) {
-        console.log('Configurando botón para probar API');
-        const nuevoBoton = btnProbarAPI.cloneNode(true);
-        btnProbarAPI.parentNode.replaceChild(nuevoBoton, btnProbarAPI);
-        nuevoBoton.addEventListener('click', probarAPI);
     }
 
     // --- FUNCIONALIDAD PARA EDITAR COMPRAS ---
@@ -367,6 +282,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Escuchar cambios en los precios unitarios para recalcular el precio total en formularios de edición
     document.querySelectorAll('.precio-uni-edit').forEach(input => {
         input.addEventListener('change', function() {
+            // También aplicar formato al precio
+            formatearPrecioCOP(this);
+            
             const compraId = this.getAttribute('data-compra');
             if (compraId) {
                 recalcularPrecioTotal(compraId);
@@ -382,10 +300,6 @@ document.addEventListener('DOMContentLoaded', function() {
         recalcularPrecioTotal(compraId);
     });
 
-    // Ejecutar la actualización inicial del formulario
-    console.log('Iniciando actualización inicial del formulario');
-    actualizarFormularioAnimales();
-
     // Verificar si hay múltiples scripts de compras.js
     const scripts = document.querySelectorAll('script');
     let contadorComprasJS = 0;
@@ -398,5 +312,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (contadorComprasJS > 1) {
         console.error(`¡ALERTA! Se encontraron ${contadorComprasJS} scripts de compras.js incluidos`);
+    }
+
+    // Ejecutar la actualización inicial del formulario
+    console.log('Iniciando actualización inicial del formulario');
+    try {
+        actualizarFormularioAnimales();
+    } catch (error) {
+        manejarError(error, 'actualización inicial');
     }
 });
