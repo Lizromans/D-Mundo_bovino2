@@ -626,10 +626,13 @@ def editar_animal(request, animal_id):
             try:
                 # Obtener datos del formulario
                 fecha_str = request.POST.get("fecha")
-                # Convertir a objeto datetime
-                fecha = datetime.strptime(fecha_str, '%Y-%m-%d')
-                edad = int(request.POST.get("edad"))
-                peso = float(request.POST.get("peso"))
+                fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+                edad = request.POST.get("edad")
+                
+                # Manejar el peso con posibles valores vacíos o None
+                peso_str = request.POST.get("peso")
+                peso = float(peso_str) if peso_str and peso_str.strip() else None
+                
                 raza = request.POST.get("raza")
                 estado = request.POST.get("estado")
                 
@@ -646,21 +649,26 @@ def editar_animal(request, animal_id):
                 messages.success(request, f"¡Animal #{animal_id} actualizado con éxito!")
                 return redirect('inventario')
                 
-            except ValueError:
-                messages.error(request, "Error: Valores inválidos en el formulario. Verifica los datos ingresados.")
+            except ValueError as e:
+                messages.error(request, f"Error: Valores inválidos en el formulario. Detalle: {str(e)}")
             except Exception as e:
                 messages.error(request, f"Error al actualizar el animal: {str(e)}")
         
-        # Si es GET o hubo error en POST, mostrar el formulario de edición
-        return render(request, "paginas/inventario.html", {
-            "animal": animal,
-            "current_page_name": "Editar Animal"
-        })
+        # Si es GET o hubo error en POST, mostrar el formulario
+        # Obtener todos los animales para mostrar en el inventario
+        animales = Animal.objects.filter(id_adm=usuario_id).order_by('-fecha')
+        
+        context = {
+            'animales': animales,
+            'animal_editando': animal,  # Animal específico que se está editando
+        }
+        
+        return render(request, 'inventario.html', context)
         
     except Animal.DoesNotExist:
         messages.error(request, "Error: No se encontró el animal.")
         return redirect('inventario')
-
+      
 @login_required
 def cancelar_animal(request):
     

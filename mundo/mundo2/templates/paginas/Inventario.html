@@ -199,8 +199,7 @@
                                             </div>
                                             <div class="mb-3">
                                                 <label for="peso_edit" class="form-label">Peso:</label>
-                                                <input type="number" step="0.01" class="form-control" id="peso_edit" name="peso" 
-                                                    value="{% if animal.peso %}{{ animal.peso }}{% endif %}" required> 
+                                                <input type="number" step="0.01" class="form-control" id="peso_edit" name="peso" value="{{ animal.peso }}" required placeholder="{{ animal.peso }}">                                              
                                             </div>
                                             <div class="mb-3">
                                                 <label for="raza_edit" class="form-label">Raza:</label>
