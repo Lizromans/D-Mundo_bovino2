@@ -56,7 +56,7 @@ function actualizarFormularioAnimales() {
                 <div class="col-md-8">
                     <label for="edad_aniven_${i}">Edad:</label>
                     <select id="edad_aniven_${i}" name="edad_aniven_${i}" class="form-control" required>
-                        <option value=""disabled>Seleccione una edad</option>
+                        <option value="" disabled selected>Selecciona una edad</option>                        
                         <option value="1-2">1 - 2 años</option>
                         <option value="2-3">2 - 3 años</option>
                         <option value="3-4">3 - 4 años</option>

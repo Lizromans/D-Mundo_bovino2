@@ -181,10 +181,15 @@
                                                                 <input type="hidden" name="detalle_id_{{ forloop.counter0 }}" value="{{ detalle.cod_detven }}">
                                                             </td>
                                                             <td>
-                                                                <input type="text" name="edad_aniven_{{ forloop.counter0 }}" class="form-control edad-edit" value="{{ detalle.edad_aniven }}" min="1" required>
+                                                                <select class="form-select edad-edit" name="edad_aniven_{{ forloop.counter0 }}" required>
+                                                                    <option value="" disabled>Selecciona una edad</option>
+                                                                    <option value="1-2" {% if detalle.edad_aniven == "1-2" %}selected{% endif %}>1 - 2 año</option>
+                                                                    <option value="2-3" {% if detalle.edad_aniven == "2-3" %}selected{% endif %}>2 - 3 años</option> 
+                                                                    <option value="3-4" {% if detalle.edad_aniven == "3-4" %}selected{% endif %}>3 - 4 años</option>                                                   
+                                                                </select>
                                                             </td>
                                                             <td>
-                                                                <input type="number" name="peso_aniven_{{ forloop.counter0 }}" class="form-control peso-edit" value="{{ detalle.peso_aniven }}" min="1" step="0.01" required>
+                                                                <input type="number" name="peso_aniven_{{ forloop.counter0 }}" class="form-control" id= "peso-edit" value="{{ detalle.peso_aniven }}" step="0.01" required placeholder="{{ detalle.peso_aniven }}">
                                                             </td>
                                                             <td>
                                                                 <div class="input-group">

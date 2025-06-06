@@ -307,6 +307,11 @@ button {
     transform: scale(1.1);
 }
 
+#peso_edit::placeholder {
+        color: #000000c0 !important;
+        opacity: 1;
+    }
+
 /* Estilos para el modal de confirmación */
 .custom-modal {
     display: none;
