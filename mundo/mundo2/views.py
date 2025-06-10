@@ -7,6 +7,7 @@ from .models import Administrador, Agenda, Animal, Documento, Compra, DetCom, Ve
 from django.db import connection
 from functools import wraps
 from datetime import date, datetime, timedelta, time
+from decimal import Decimal, InvalidOperation
 from django.utils import timezone  # Importación correcta para timezone
 import calendar, re
 from django.template.loader import render_to_string
@@ -506,28 +507,38 @@ def inventario(request):
             animales = animales.filter(fecha=busqueda_fecha)
             tipo_busqueda = "fecha"
         
-        # 3. Verificar si la búsqueda es una edad (número seguido de "años" o solo número)
-        elif re.match(r'^\d+(\s*años)?$', busqueda):
-            # Extraer solo el número
-            edad = re.match(r'^(\d+)', busqueda).group(1)
-            # Filtrar por edad
-            animales = animales.filter(edad=int(edad))
-            tipo_busqueda = "edad"
-        
-        # 4. Para cualquier otro caso, considerar como búsqueda de texto
-        else:
-            # Buscar solo en campos de texto
-            animales = animales.filter(
-                Q(raza__icontains=busqueda) |
-                Q(estado__icontains=busqueda)
-            )
-            tipo_busqueda = "texto"
+        # 3. Verificar si la búsqueda es una edad individual o rango de edades
+        elif re.match(r'^\d+(-\d+)?(\s*años?)?$', busqueda.strip()):
+            busqueda_limpia = busqueda.strip().replace(' años', '').replace(' año', '')
+            
+            if '-' in busqueda_limpia:
+                # Buscar exactamente el rango ingresado
+                animales = animales.filter(edad=busqueda_limpia)
+                tipo_busqueda = f"rango de edad ({busqueda_limpia} años)"
+            else:
+                # Para edad individual, buscar en qué rango está incluida
+                edad_buscada = int(busqueda_limpia)
+                # Filtrar rangos que contengan esta edad
+                animales = animales.filter(
+                    Q(edad__contains=f"{edad_buscada}-") |  # Comienza con la edad
+                    Q(edad__contains=f"-{edad_buscada}")    # Termina con la edad
+                )
+                tipo_busqueda = f"edad {edad_buscada} años"
     
     # Aplicar filtro por estado o edad si se ha seleccionado
     if tipo_filtro == 'Estado' and valor_filtro:
         animales = animales.filter(estado=valor_filtro)
     elif tipo_filtro == 'Edad' and valor_filtro:
         animales = animales.filter(edad=valor_filtro)
+    
+    # FORMATEAR EL PESO DE CADA ANIMAL
+    for animal in animales:
+        if animal.peso:
+            # Formato con 2 decimal: 000,00
+            animal.peso_formateado = f"{animal.peso:.2f}".replace('.', ',')
+
+        else:
+            animal.peso_formateado = "0,00"
     
     # Determinar el siguiente código de animal para este administrador
     proximo_codigo = 1
@@ -551,47 +562,59 @@ def inventario(request):
 @login_required
 def registrar_animal(request):
     if request.method == "POST":
-        # Obtener el ID del administrador actual desde la sesión
         usuario_id = request.session.get('usuario_id')
         
         try:
-            # Obtener la instancia del administrador usando el ID
             administrador = Administrador.objects.get(pk=usuario_id)
             
-            # Determinar el siguiente código de animal para este administrador específico
             ultimo_animal = Animal.objects.filter(id_adm=usuario_id).order_by('-cod_ani').first()
-            siguiente_cod_ani = 1  # Código inicial para nuevos usuarios
+            siguiente_cod_ani = 1
             
             if ultimo_animal:
                 siguiente_cod_ani = ultimo_animal.cod_ani + 1
             
             # Obtener datos del formulario
             fecha_str = request.POST.get("fecha")
-            # Convertir a objeto datetime completo
-            fecha = datetime.strptime(fecha_str, '%Y-%m-%d')  # o el formato que uses
+            fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()  # .date() para DateField
             edad = str(request.POST.get("edad"))
-            peso = float(request.POST.get("peso"))
+            
+            # FORMA CORRECTA de manejar Decimal con soporte para formato con coma
+            peso_str = request.POST.get("peso")
+            peso = None
+            if peso_str and peso_str.strip():  # Verificar que no esté vacío
+                try:
+                    # Permitir entrada con coma como separador decimal
+                    peso_normalizado = peso_str.replace(',', '.')
+                    peso = Decimal(peso_normalizado)
+                    
+                    # Validar que el peso sea positivo
+                    if peso <= 0:
+                        messages.error(request, "Error: El peso debe ser mayor que cero.")
+                        return redirect('inventario')
+                        
+                except (ValueError, InvalidOperation):
+                    messages.error(request, "Error: El peso debe ser un número válido (ej: 15,05 o 15.05).")
+                    return redirect('inventario')
+            
             raza = request.POST.get("raza")
             estado = request.POST.get("estado")
             
             # Crear y guardar el nuevo animal
             nuevo_animal = Animal(
                 cod_ani=siguiente_cod_ani,
-                fecha=fecha,  # Aquí usamos el objeto datetime completo
+                fecha=fecha,
                 edad=edad,
-                peso=peso,
+                peso=peso,  # Puede ser None o un Decimal
                 raza=raza,
                 estado=estado,
                 id_adm=administrador
             )
             nuevo_animal.save()
             
-            messages.success(request, f"¡Animal #{siguiente_cod_ani} registrado con éxito!")
+            messages.success(request, f"¡Animal registrado con éxito!")
             
         except Administrador.DoesNotExist:
             messages.error(request, "Error: No se pudo encontrar el administrador.")
-        except ValueError:
-            messages.error(request, "Error: Valores inválidos en el formulario. Verifica los datos ingresados.")
         except Exception as e:
             messages.error(request, f"Error al registrar el animal: {str(e)}")
         
@@ -609,13 +632,10 @@ def eliminar_animal(request, animal_id):
             # Obtener el animal asegurándose que pertenezca al administrador actual
             animal = get_object_or_404(Animal, cod_ani=animal_id, id_adm=usuario_id)
             
-            # Guardar el código del animal para el mensaje
-            codigo_animal = animal.cod_ani
-            
             # Eliminar el animal
             animal.delete()
             
-            messages.success(request, f"Animal #{codigo_animal} eliminado con éxito!")
+            messages.success(request, f"Animal eliminado con éxito!")
             
         except Animal.DoesNotExist:
             messages.error(request, "Error: No se encontró el animal.")
@@ -632,58 +652,72 @@ def editar_animal(request, animal_id):
     # Obtener el ID del administrador actual desde la sesión
     usuario_id = request.session.get('usuario_id')
     
-    try:
-        # Obtener el animal asegurándose que pertenezca al administrador actual
-        animal = get_object_or_404(Animal, cod_ani=animal_id, id_adm=usuario_id)
-        
-        if request.method == "POST":
-            # Procesar el formulario de edición
-            try:
-                # Obtener datos del formulario
-                fecha_str = request.POST.get("fecha")
-                fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
-                edad = request.POST.get("edad")
-                
-                # Manejar el peso con posibles valores vacíos o None
-                peso_str = request.POST.get("peso")
-                peso = float(peso_str) if peso_str and peso_str.strip() else None
-                
-                raza = request.POST.get("raza")
-                estado = request.POST.get("estado")
-                
-                # Actualizar los campos del animal
-                animal.fecha = fecha
-                animal.edad = edad
-                animal.peso = peso
-                animal.raza = raza
-                animal.estado = estado
-                
-                # Guardar los cambios
-                animal.save()
-                
-                messages.success(request, f"¡Animal #{animal_id} actualizado con éxito!")
-                return redirect('inventario')
-                
-            except ValueError as e:
-                messages.error(request, f"Error: Valores inválidos en el formulario. Detalle: {str(e)}")
-            except Exception as e:
-                messages.error(request, f"Error al actualizar el animal: {str(e)}")
-        
-        # Si es GET o hubo error en POST, mostrar el formulario
-        # Obtener todos los animales para mostrar en el inventario
-        animales = Animal.objects.filter(id_adm=usuario_id).order_by('-fecha')
-        
-        context = {
-            'animales': animales,
-            'animal_editando': animal,  # Animal específico que se está editando
-        }
-        
-        return render(request, 'inventario.html', context)
-        
-    except Animal.DoesNotExist:
-        messages.error(request, "Error: No se encontró el animal.")
-        return redirect('inventario')
-      
+    # Obtener el animal asegurándose que pertenezca al administrador actual
+    animal = get_object_or_404(Animal, cod_ani=animal_id, id_adm=usuario_id)
+    
+    if request.method == "POST":
+        try:
+            # Obtener datos del formulario
+            fecha_str = request.POST.get("fecha")
+            fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+            edad = str(request.POST.get("edad"))
+            
+            # Manejar el peso con formato decimal
+            peso_str = request.POST.get("peso")
+            peso = None
+            if peso_str and peso_str.strip():
+                try:
+                    # Permitir entrada con coma como separador decimal
+                    peso_normalizado = peso_str.replace(',', '.')
+                    peso = Decimal(peso_normalizado)
+                    
+                    # Validar que el peso sea positivo
+                    if peso <= 0:
+                        messages.error(request, "Error: El peso debe ser mayor que cero.")
+                        return render(request, "paginas/Inventario.html", {
+                            "animal": animal,
+                            "current_page_name": "Inventario"
+                        })
+                        
+                except (ValueError, InvalidOperation):
+                    messages.error(request, "Error: El peso debe ser un número válido (ej: 15,05 o 15.05).")
+                    return render(request, "paginas/Inventario.html", {
+                        "animal": animal,
+                        "current_page_name": "Inventario"
+                    })
+            
+            raza = request.POST.get("raza")
+            estado = request.POST.get("estado")
+            
+            # Actualizar el animal
+            animal.fecha = fecha
+            animal.edad = edad
+            animal.peso = peso
+            animal.raza = raza
+            animal.estado = estado
+            animal.save()
+            
+            messages.success(request, f"¡Animal actualizado con éxito!")
+            return redirect('inventario')
+            
+        except Exception as e:
+            messages.error(request, f"Error al actualizar el animal: {str(e)}")
+    
+    # Para GET request, formatear el peso para mostrar en el formulario
+    if animal.peso:
+        animal.peso_formateado = f"{animal.peso:.2f}".replace('.', ',')
+    else:
+        animal.peso_formateado = "0,00"
+
+    
+    return render(request, "paginas/Inventario.html", {
+        "animal": animal,
+        "current_page_name": "Inventario",
+        'recordatorios': request.recordatorios,
+        'hay_recordatorios': request.hay_recordatorios,
+        'total_recordatorios': request.total_recordatorios
+    })
+
 @login_required
 def cancelar_animal(request):
     
@@ -1225,7 +1259,7 @@ def compras(request):
     
     try:
         # Obtener todas las ventas del administrador actual
-        compras= Compra.objects.filter(id_adm=usuario_id).order_by('-fecha')
+        compras = Compra.objects.filter(id_adm=usuario_id).order_by('-fecha')
         
         # Obtener parámetros de búsqueda y filtrado
         busqueda = request.GET.get('busqueda', '')
@@ -1246,6 +1280,14 @@ def compras(request):
         # Obtener detalles para cada venta
         for compra in compras:
             compra.detalles = DetCom.objects.filter(cod_com=compra.cod_com)
+            
+            # FORMATEAR EL PESO DE CADA DETALLE DE COMPRA
+            for detalle in compra.detalles:
+                if detalle.peso_aniCom:
+                    # Formato con 2 decimales: 000,00
+                    detalle.peso_formateado = f"{detalle.peso_aniCom:.2f}".replace('.', ',')
+                else:
+                    detalle.peso_formateado = "0,00"
         
         context = {
             'compras': compras,
@@ -1263,7 +1305,7 @@ def compras(request):
     except Exception as e:
         messages.error(request, f"Error al cargar las compras: {str(e)}")
         return redirect('home')
-
+    
 @login_required
 def crear_compra(request):
     """Vista para crear una nueva compra con sus detalles."""
@@ -1307,7 +1349,7 @@ def crear_compra(request):
                 # Obtener valores con validación
                 cod_ani = request.POST.get(f'cod_ani_{i}', '')
                 edad_aniCom = request.POST.get(f'edad_aniCom_{i}', '0')
-                peso_aniCom = request.POST.get(f'peso_aniCom_{i}', '0')
+                peso_aniCom = request.POST.get(f'peso_aniCom_{i}', '0,00')
                 
                 # Asegurar que los campos no sean None o cadenas vacías
                 if not cod_ani:

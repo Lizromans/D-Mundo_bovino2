@@ -116,7 +116,11 @@ class Animal(models.Model):
     cod_ani = models.IntegerField()  # ID específico por usuario
     fecha = models.DateField()
     edad = models.CharField(max_length=255)
-    peso = models.FloatField(null=True, blank=True)
+    peso = models.DecimalField(
+        max_digits=8,          # Total de dígitos (incluyendo decimales)
+        decimal_places=2,      # Número de decimales
+        blank=True, 
+        null=True, )
     raza = models.CharField(max_length=45)
     estado = models.CharField(max_length=45)
     id_adm = models.ForeignKey(Administrador, models.DO_NOTHING, db_column='id_adm')
@@ -159,7 +163,11 @@ class DetCom(models.Model):
     cod_com= models.ForeignKey('Compra', models.DO_NOTHING, db_column='cod_com')
     cod_ani = models.IntegerField(255)
     edad_aniCom = models.CharField(max_length=255, null=True, blank=True, db_column='edad_aniCom')
-    peso_aniCom = models.FloatField(null=True, blank=True, db_column='peso_aniCom')
+    peso_aniCom = models.DecimalField(
+        max_digits=8,          # Total de dígitos (incluyendo decimales)
+        decimal_places=2,      # Número de decimales
+        blank=True, 
+        null=True, )
     precio_uni = models.FloatField()
     
     class Meta:
@@ -174,7 +182,11 @@ class DetVen(models.Model):
     cod_ven = models.ForeignKey('Venta', models.DO_NOTHING, db_column='cod_ven')
     cod_ani = models.IntegerField(255)
     edad_aniven = models.CharField(max_length=255, null=True, blank=True, db_column='edad_aniven')
-    peso_aniven = models.FloatField()  # Field name made lowercase.
+    peso_aniven= models.DecimalField(
+        max_digits=8,          # Total de dígitos (incluyendo decimales)
+        decimal_places=2,      # Número de decimales
+        blank=True, 
+        null=True, ) # Field name made lowercase.
     precio_uni = models.FloatField()
 
     class Meta:

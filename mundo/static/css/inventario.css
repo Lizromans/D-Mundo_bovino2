@@ -226,21 +226,32 @@ button {
     text-overflow: ellipsis;
 }
 
-/* Estilos para la información en columnas */
+/* Estilos para la información en columnas - MEJORADO */
 .info-detalle {
     display: flex;
     justify-content: space-between;
     width: 100%;
+    gap: 10px; /* Agrega espacio entre columnas */
+    margin-top: 10px;
 }
 
 .detalle-izquierda, .detalle-derecha {
-    width: 48%; /* Ligeramente menor que 50% para evitar problemas de espacio */
+    width: calc(50% - 5px); /* Ajusta el ancho considerando el gap */
+    display: flex;
+    flex-direction: column;
 }
 
 .info-detalle p {
-    margin: 5px 0;
-    font-size: 0.9rem;
-    word-break: break-word; /* Evita que textos largos rompan el diseño */
+    margin: 3px 0;
+    font-size: 0.85rem;
+    word-break: break-word;
+    line-height: 1.3;
+}
+
+/* Asegurar que los textos largos no rompan el diseño */
+.info-detalle p b {
+    display: inline-block;
+    min-width: fit-content;
 }
 
 /* ===== CORRECCIÓN: Posicionamiento de botones ===== */
@@ -298,19 +309,10 @@ button {
     filter: brightness(1.3) saturate(1.5);
 }
 
-/* Corregir los efectos hover que estaban vinculados incorrectamente */
-.btn-editar:hover {
-    transform: scale(1.1);
-}
-
-.btn-eliminar:hover {
-    transform: scale(1.1);
-}
-
 #peso_edit::placeholder {
-        color: #000000c0 !important;
-        opacity: 1;
-    }
+    color: #000000c0 !important;
+    opacity: 1;
+}
 
 /* Estilos para el modal de confirmación */
 .custom-modal {
@@ -450,6 +452,7 @@ button {
     margin-right: 5px;
     background-color: var(--color-secundario)!important;
     border-radius: 20px;
+    color: white!important;
 }
 
 .filtros-activos a.text-white {
@@ -469,55 +472,77 @@ button {
     color: white;
 }
 
-/* ===== CORRECCIÓN: Media queries para responsividad ===== */
+/* ===== MEDIA QUERIES CORREGIDOS ===== */
+
+/* Desktop pequeño */
 @media screen and (min-width: 1024px) and (max-width: 1399px) {
     .fichas {
         margin-bottom: 15px;
     }
 
     .fichas-container {
-    display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 0.9%;
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 0.9%;
     }
 
     .col-12{
-    position: relative;
-    margin-top: 3%;
-    margin-bottom: 26.8%;
+        position: relative;
+        margin-top: 3%;
+        margin-bottom: 26.8%;
     }
     
+    /* MANTENER las dos columnas en desktop pequeño */
     .info-detalle {
-        flex-direction: column;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
     }
     
     .detalle-izquierda, .detalle-derecha {
-        width: 100%;
+        width: calc(50% - 5px);
+    }
+    
+    .info-detalle p {
+        font-size: 0.85rem;
     }
 }
 
-/* Desktop Computers (1441px and above) */
+/* Desktop grande */
 @media screen and (min-width: 1400px) {
     .navbar-form {
-    position: relative;
-    margin-top: 3%;
-    margin-bottom: 7%;
-    width: 40%;
-    left: 63.5%;
+        position: relative;
+        margin-top: 3%;
+        margin-bottom: 7%;
+        width: 40%;
+        left: 63.5%;
     }
+    
     .filtrado-container {
-    margin-left: 102%;
-    margin-top: -11.8%;
+        margin-left: 102%;
+        margin-top: -11.8%;
     }
 
     .fichas-container {
-    display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 6%;
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 6%;
     }
+    
     .col-12{
-    position: relative;
-    margin-top: 3%;
-    margin-bottom: 25.1%;
-}
+        position: relative;
+        margin-top: 3%;
+        margin-bottom: 25.1%;
+    }
+    
+    /* Mantener las dos columnas en desktop grande */
+    .info-detalle {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    
+    .detalle-izquierda, .detalle-derecha {
+        width: calc(50% - 6px);
+    }
 }

@@ -130,7 +130,7 @@
                             <!-- Columna izquierda -->
                             <div class="detalle-izquierda">
                                 <p><b>Edad:</b> {{ animal.edad }} años</p>
-                                <p><b>Peso:</b> {{ animal.peso }} kg</p>
+                                <p><b>Peso:</b> {{ animal.peso_formateado }} kg</p>
                             </div>
                             <!-- Columna derecha -->
                             <div class="detalle-derecha">
@@ -199,7 +199,7 @@
                                             </div>
                                             <div class="mb-3">
                                                 <label for="peso_edit" class="form-label">Peso:</label>
-                                                <input type="number" step="0.01" class="form-control" id="peso_edit" name="peso" value="{{ animal.peso }}" required placeholder="{{ animal.peso }}">                                              
+                                                <input type="text" class="form-control" id="peso_edit" name="peso" value="{{ animal.peso_formateado }}" required>                                              
                                             </div>
                                             <div class="mb-3">
                                                 <label for="raza_edit" class="form-label">Raza:</label>
@@ -266,7 +266,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="peso" class="form-label">Peso:</label>
-                            <input type="number" step="0.01" class="form-control" id="peso" name="peso" required>
+                            <input type="text" class="form-control" id="peso" name="peso" required>
                         </div>
                         <div class="mb-3">
                             <label for="raza" class="form-label">Raza:</label>
