@@ -114,11 +114,50 @@ function actualizarEstadoBoton() {
     if (!btnGuardar) return;
     
     if (cambiosPendientes) {
-        btnGuardar.style.background = '#947643;';
-        btnGuardar.style.boxShadow = '0 0 10px';
+        btnGuardar.style.background = '#947643';
+        btnGuardar.style.boxShadow = '0 0 10px rgba(148, 118, 67, 0.5)';
         btnGuardar.innerHTML = 'Guardar Cambios';
         btnGuardar.classList.add('cambios-pendientes');
+    } else {
+        btnGuardar.style.background = '';
+        btnGuardar.style.boxShadow = '';
+        btnGuardar.innerHTML = 'Guardar';
+        btnGuardar.classList.remove('cambios-pendientes');
     }
+}
+
+// Función para descartar cambios
+function descartarCambios() {
+    if (!cambiosPendientes) {
+        mostrarNotificacion('info', 'No hay cambios para descartar');
+        return;
+    }
+    
+    // Obtener estado actual guardado
+    const estadoActual = getModulosEstado();
+    
+    // Restaurar checkboxes al estado guardado
+    Object.keys(modulosConfig).forEach(key => {
+        const checkbox = modulosConfig[key].checkbox;
+        if (checkbox) {
+            checkbox.checked = estadoActual[key];
+        }
+    });
+    
+    // Limpiar cambios pendientes
+    cambiosPendientes = false;
+    estadoTemporal = { ...estadoActual };
+    
+    // Actualizar botón
+    actualizarEstadoBoton();
+    
+    // Remover clases de modificado
+    document.querySelectorAll('.modulo-item.modificado').forEach(item => {
+        item.classList.remove('modificado');
+    });
+    
+    // Mostrar notificación
+    mostrarNotificacion('info', 'Cambios descartados');
 }
 
 // Función para guardar todos los cambios
@@ -144,7 +183,7 @@ function guardarCambios() {
     
     // Limpiar cambios pendientes
     cambiosPendientes = false;
-    estadoTemporal = {};
+    estadoTemporal = { ...estadoActual };
     
     // Actualizar botón
     actualizarEstadoBoton();
@@ -158,20 +197,13 @@ function guardarCambios() {
     mostrarNotificacion('success', 'Cambios guardados correctamente');
 }
 
-// Función para mostrar notificaciones
+// Función para mostrar notificaciones (CORREGIDA)
 function mostrarNotificacion(tipo, mensaje) {
     // Remover notificación anterior si existe
     const notifAnterior = document.querySelector('.modulo-notification');
     if (notifAnterior) {
         notifAnterior.remove();
     }
-    
-    const colores = {
-        success: '#28a745',
-        info: '#17a2b8',
-        warning: '#ffc107',
-        error: '#dc3545'
-    };
     
     const iconos = {
         success: 'check-circle',
@@ -180,28 +212,25 @@ function mostrarNotificacion(tipo, mensaje) {
         error: 'times-circle'
     };
     
+    // CREAR el elemento notificación
     const notif = document.createElement('div');
     notif.className = 'modulo-notification';
     notif.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
-        background: ${colores[tipo]};
+        background: ${tipo === 'success' ? '#28a745' : tipo === 'error' ? '#dc3545' : '#17a2b8'};
         color: white;
-        padding: 12px 20px;
+        padding: 15px 20px;
         border-radius: 5px;
         z-index: 9999;
-        font-weight: bold;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         transform: translateX(100%);
         transition: transform 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     `;
     
     notif.innerHTML = `
-        <i class="fas fa-${iconos[tipo]}"></i>
+        <i class="fas fa-${iconos[tipo]}" style="margin-right: 10px;"></i>
         ${mensaje}
     `;
     
@@ -221,6 +250,46 @@ function mostrarNotificacion(tipo, mensaje) {
             }
         }, 300);
     }, 4000);
+}
+
+// Función para mostrar modal de confirmación (NUEVA)
+function mostrarModalConfirmacion() {
+    const modalHtml = `
+        <div class="modal fade" id="modulosModal" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cambios Pendientes</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>Tienes cambios pendientes en la configuración de módulos.</p>
+                        <p>¿Qué deseas hacer?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="descartarCambiosYContinuar(this)">
+                            Descartar y Continuar
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="guardarTodoYContinuar(this)">
+                            Guardar Todo
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="cerrarModalConfirmacion(this)">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// Función para cerrar modal de confirmación
+function cerrarModalConfirmacion(btn) {
+    const modal = btn.closest('.modal');
+    if (modal) {
+        modal.remove();
+    }
 }
 
 // Función para inicializar checkboxes en configuraciones
@@ -256,100 +325,42 @@ function inicializarConfiguraciones() {
         }
     });
     
-    // Interceptar el botón de guardar original
-    const btnGuardarOriginal = document.querySelector('[data-bs-target="#exampleModal"]');
-    if (btnGuardarOriginal) {
-        btnGuardarOriginal.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            if (cambiosPendientes) {
-                // Mostrar modal personalizado para confirmar cambios de módulos
-                mostrarModalConfirmacion();
-            } else {
-                // Si no hay cambios de módulos, proceder normal
-                document.getElementById('exampleModal').style.display = 'block';
-            }
-        });
-    }
+    // MODIFICACIÓN CRÍTICA: No interferir con el formulario original
+    // Solo agregar funcionalidad adicional sin bloquear el comportamiento normal
     
-    // Modificar el modal existente para incluir lógica de módulos
-    const btnAceptarModal = document.querySelector('#exampleModal .btn[onclick*="submit"]');
-    if (btnAceptarModal) {
-        btnAceptarModal.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Guardar cambios de módulos primero
-            if (cambiosPendientes) {
-                guardarCambios();
-            }
-            
-            // Luego enviar el formulario
-            setTimeout(() => {
-                document.getElementById('perfil-form').submit();
-            }, 500);
-        });
-    }
-    
-    // Agregar botón de descartar cambios si hay cambios pendientes
-    crearBotonDescartar();
+    // Botón de descartar removido por solicitud del usuario
 }
-
 
 // Funciones para el modal personalizado
 function descartarCambiosYContinuar(btn) {
     descartarCambios();
     btn.closest('.modal').remove();
-    // Mostrar modal original
-    const modalOriginal = new bootstrap.Modal(document.getElementById('exampleModal'));
-    modalOriginal.show();
+    // Proceder con el envío normal del formulario
+    const form = document.getElementById('perfil-form');
+    if (form) {
+        form.submit();
+    }
 }
 
 function guardarTodoYContinuar(btn) {
     guardarCambios();
     btn.closest('.modal').remove();
-    // Enviar formulario directamente
+    // Enviar formulario después de guardar
     setTimeout(() => {
-        document.getElementById('perfil-form').submit();
+        const form = document.getElementById('perfil-form');
+        if (form) {
+            form.submit();
+        }
     }, 500);
 }
 
 // Exponer funciones globalmente para los botones
 window.descartarCambiosYContinuar = descartarCambiosYContinuar;
 window.guardarTodoYContinuar = guardarTodoYContinuar;
+window.cerrarModalConfirmacion = cerrarModalConfirmacion;
 
-// Función para crear botón de descartar
-function crearBotonDescartar() {
-    const botonSeccion = document.querySelector('.boton-seccion');
-    if (!botonSeccion) return;
-    
-    const btnDescartar = document.createElement('button');
-    btnDescartar.type = 'button';
-    btnDescartar.className = 'btn-descartar';
-    btnDescartar.innerHTML = 'Descartar Cambios';
-    btnDescartar.style.cssText = `
-        background: #6c757d;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 5px;
-        margin-right: 10px;
-        cursor: pointer;
-        display: none;
-    `;
-    
-    btnDescartar.addEventListener('click', descartarCambios);
-    
-    botonSeccion.insertBefore(btnDescartar, botonSeccion.firstChild);
-    
-    // Función para mostrar/ocultar botón descartar
-    const interval = setInterval(() => {
-        if (cambiosPendientes) {
-            btnDescartar.style.display = 'inline-block';
-        } else {
-            btnDescartar.style.display = 'none';
-        }
-    }, 100);
-}
+// Función para crear botón de descartar - REMOVIDA
+// Esta función fue removida por solicitud del usuario
 
 // Función principal de inicialización
 function inicializar() {
@@ -390,5 +401,11 @@ window.ModulosDebug = {
     resetear: function() {
         sessionStorage.removeItem('modulosEstado');
         location.reload();
+    },
+    // Nueva función para verificar estado
+    verificarEstado: function() {
+        console.log('Cambios pendientes:', cambiosPendientes);
+        console.log('Estado temporal:', estadoTemporal);
+        console.log('Estado guardado:', getModulosEstado());
     }
 };

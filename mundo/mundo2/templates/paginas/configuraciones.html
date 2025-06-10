@@ -33,7 +33,7 @@
                 <div class="campo-grupo">
                     <label for="nombreUsuario">Nombre de Usuario</label>
                     <div class="input-con-icono">
-                        <input type="text" class="form-control" id="nombreUsuario" name="nom_usu" placeholder="{{ admin.nom_usu }}">
+                        <input type="text" class="form-control" id="nombreUsuario" name="nom_usu" value="{{ admin.nom_usu }}">
                         <span class="edit-icon"><i class="fas fa-edit"><img src="{% static 'img/icons9.png' %}" alt="Referencia de usuario"></i></span>
                     </div>
                 </div>
@@ -41,7 +41,7 @@
                 <div class="campo-grupo">
                     <label for="email">Email</label>
                     <div class="input-con-icono">
-                        <input type="email" class="form-control" id="email" name="email" placeholder="{{ admin.correo }}">
+                        <input type="email" class="form-control" id="email" name="email" value="{{ admin.correo }}">
                         <span class="edit-icon"><i class="fas fa-edit"><img src="{% static 'img/icons10.png' %}" alt="Referencia de correo"></i></span>
                     </div>
                 </div>

@@ -232,7 +232,7 @@ button {
     justify-content: space-between;
     width: 100%;
     gap: 10px; /* Agrega espacio entre columnas */
-    margin-top: 10px;
+    margin-top: 3px;
 }
 
 .detalle-izquierda, .detalle-derecha {
@@ -483,7 +483,7 @@ button {
     .fichas-container {
         display: flex;
         flex-wrap: wrap;
-        margin-bottom: 0.9%;
+        margin-bottom: 5.3%;
     }
 
     .col-12{
