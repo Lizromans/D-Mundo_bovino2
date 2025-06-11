@@ -1,5 +1,5 @@
 // Función para hacer que los mensajes de alerta desaparezcan
-function setupAutoHideAlerts(duration = 2000) {
+function setupAutoHideAlerts(duration = 1800) {
   // Selecciona todos los elementos con las clases de alerta
   const alerts = document.querySelectorAll('.alert-info, .alert-danger, .alert-success');
   
