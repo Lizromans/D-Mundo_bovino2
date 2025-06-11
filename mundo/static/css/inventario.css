@@ -174,10 +174,22 @@ button {
     border-bottom: 1px solid #000000;
     margin-left: 2.5%;
 }
+
 .nav-tabs .nav-link {
     color: #000000;
     font-weight: 500;
 }
+
+.nav-link {
+    position: relative;
+    transition: top 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+    top: -5px;
+    border: none;
+}
+
 
 .badge{
     background-color: var(--color-fondo);
