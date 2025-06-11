@@ -252,37 +252,39 @@ function mostrarNotificacion(tipo, mensaje) {
     }, 4000);
 }
 
-// Función para mostrar modal de confirmación (NUEVA)
-function mostrarModalConfirmacion() {
-    const modalHtml = `
-        <div class="modal fade" id="modulosModal" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Cambios Pendientes</h5>
-                    </div>
-                    <div class="modal-body">
-                        <p>Tienes cambios pendientes en la configuración de módulos.</p>
-                        <p>¿Qué deseas hacer?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="descartarCambiosYContinuar(this)">
-                            Descartar y Continuar
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="guardarTodoYContinuar(this)">
-                            Guardar Todo
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="cerrarModalConfirmacion(this)">
-                            Cancelar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+  // Interceptar el botón de guardar originalAdd commentMore actions
+    const btnGuardarOriginal = document.querySelector('[data-bs-target="#exampleModal"]');
+    if (btnGuardarOriginal) {
+        btnGuardarOriginal.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (cambiosPendientes) {
+                // Mostrar modal personalizado para confirmar cambios de módulos
+                mostrarModalConfirmacion();
+            } else {
+                // Si no hay cambios de módulos, proceder normal
+                document.getElementById('exampleModal').style.display = 'block';
+            }
+        });
+    }
     
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
+    // Modificar el modal existente para incluir lógica de módulos
+    const btnAceptarModal = document.querySelector('#exampleModal .btn[onclick*="submit"]');
+    if (btnAceptarModal) {
+        btnAceptarModal.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Guardar cambios de módulos primero
+            if (cambiosPendientes) {
+                guardarCambios();
+            }
+            
+            // Luego enviar el formulario
+            setTimeout(() => {
+                document.getElementById('perfil-form').submit();
+            }, 500);
+        });
+    }
 
 // Función para cerrar modal de confirmación
 function cerrarModalConfirmacion(btn) {
