@@ -75,7 +75,7 @@
 .navbar-form {
     position: relative;
     margin-top: 2%;
-    margin-bottom: 7%;
+    margin-bottom: -3%;
     width: 40%;
     left: 63%;
 }
@@ -169,7 +169,45 @@ button {
     border-radius: 4px;
 }
 
-/* ===== CORRECCIÓN: Estilos para las fichas de animales ===== */
+/* Estilos adicionales para las pestañas y estados */
+.nav-tabs {
+    border-bottom: 1px solid #000000;
+    margin-left: 2.5%;
+}
+.nav-tabs .nav-link {
+    color: #000000;
+    font-weight: 500;
+}
+
+.badge{
+    background-color: var(--color-fondo);
+    color: black;
+}
+.nav-tabs .nav-link.active {
+    color: var(--color-secundario);
+    background-color: var(--color-fondo);
+    border-color: #000000 #000000 var(--color-fondo);
+}
+        
+.fichas.vendido {
+    position: relative;
+    opacity: 0.8;
+    border: 1px solid #28a746b4;
+}
+        
+.badge-vendido {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+        
+.tab-content {
+    min-height: 400px;
+}
+      
+
+/* ===== Estilos para las fichas de animales ===== */
 .fichas-container {
     display: flex;
     flex-wrap: wrap;
@@ -444,7 +482,7 @@ button {
 .filtros-activos {
     background-color: transparent;
     border-radius: 10px;
-    margin-top: -10%;
+    margin-bottom: -5%;
 }
 
 .filtros-activos .badge {
@@ -471,6 +509,7 @@ button {
     background-color: var(--color-secundario);
     color: white;
 }
+
 
 /* ===== MEDIA QUERIES CORREGIDOS ===== */
 

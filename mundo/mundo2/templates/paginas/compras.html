@@ -189,7 +189,10 @@
                                                                 </select>
                                                             </td>
                                                             <td>
-                                                                <input type="number" name="peso_anicom_{{ forloop.counter0 }}" class="form-control" id="peso-edit" value="{{ detalle.peso_aniCom }}" min="1" step="0.01" required placeholder="{{ detalle.peso_aniCom }}"">
+                                                                <input type="text" name="peso_anicom_{{ forloop.counter0 }}" class="form-control" 
+                                                                        value="{{ detalle.peso_aniCom|floatformat:2 }}" 
+                                                                        step="0.01" required 
+                                                                        pattern="[0-9]+([,.][0-9]+)?">
                                                             </td>
                                                             <td>
                                                                 <div class="input-group">

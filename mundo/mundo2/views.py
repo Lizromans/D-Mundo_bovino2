@@ -540,6 +540,10 @@ def inventario(request):
         else:
             animal.peso_formateado = "0,00"
     
+    # Separar animales por estado
+    animales_disponibles = animales.exclude(estado='Vendido')
+    animales_vendidos = animales.filter(estado='Vendido')
+
     # Determinar el siguiente código de animal para este administrador
     proximo_codigo = 1
     ultimo_animal = Animal.objects.filter(id_adm=usuario_id).order_by('-cod_ani').first()
@@ -554,6 +558,8 @@ def inventario(request):
         "tipo_filtro": tipo_filtro,
         "valor_filtro": valor_filtro,
         "tipo_busqueda": tipo_busqueda,  # Pasar el tipo de búsqueda detectado a la plantilla
+        'animales_disponibles': animales_disponibles,
+        'animales_vendidos': animales_vendidos,
         'recordatorios': request.recordatorios,
         'hay_recordatorios': request.hay_recordatorios,
         'total_recordatorios': request.total_recordatorios
@@ -622,6 +628,28 @@ def registrar_animal(request):
     
     return redirect('inventario')
 
+def marcar_vendido(request, cod_ani):
+    if request.method == 'POST':
+        try:
+            animal = Animal.objects.get(cod_ani=cod_ani)
+            animal.estado = 'Vendido'
+            animal.save()
+            messages.success(request, f'Animal {cod_ani} marcado como vendido exitosamente.')
+        except Animal.DoesNotExist:
+            messages.error(request, 'Animal no encontrado.')
+    return redirect('inventario')
+
+def restaurar_animal(request, cod_ani):
+    if request.method == 'POST':
+        try:
+            animal = Animal.objects.get(cod_ani=cod_ani)
+            animal.estado = 'Saludable'  # O el estado que prefieras por defecto
+            animal.save()
+            messages.success(request, f'Animal {cod_ani} cambiado a disponible.')
+        except Animal.DoesNotExist:
+            messages.error(request, 'Animal no encontrado.')
+    return redirect('inventario')
+
 @login_required
 def eliminar_animal(request, animal_id):
     if request.method == "POST":
@@ -680,7 +708,7 @@ def editar_animal(request, animal_id):
                         })
                         
                 except (ValueError, InvalidOperation):
-                    messages.error(request, "Error: El peso debe ser un número válido (ej: 15,05 o 15.05).")
+                    messages.error(request, "Error: El peso debe ser un número válido (ej: 155,05 o 155.05).")
                     return render(request, "paginas/Inventario.html", {
                         "animal": animal,
                         "current_page_name": "Inventario"
@@ -1349,7 +1377,24 @@ def crear_compra(request):
                 # Obtener valores con validación
                 cod_ani = request.POST.get(f'cod_ani_{i}', '')
                 edad_aniCom = request.POST.get(f'edad_aniCom_{i}', '0')
-                peso_aniCom = request.POST.get(f'peso_aniCom_{i}', '0,00')
+                
+                # FORMA CORRECTA de manejar Decimal con soporte para formato con coma
+                peso_str = request.POST.get(f'peso_aniCom_{i}', '0,00')
+                peso_aniCom = None
+                if peso_str and peso_str.strip():  # Verificar que no esté vacío
+                    try:
+                        # Permitir entrada con coma como separador decimal
+                        peso_normalizado = peso_str.replace(',', '.')
+                        peso_aniCom = Decimal(peso_normalizado)
+                        
+                        # Validar que el peso sea positivo
+                        if peso_aniCom <= 0:
+                            messages.error(request, f"Error: El peso del animal {i} debe ser mayor que cero.")
+                            continue
+                            
+                    except (ValueError, InvalidOperation):
+                        messages.error(request, f"Error: El peso del animal {i} debe ser un número válido (ej: 15,05 o 15.05).")
+                        continue
                 
                 # Asegurar que los campos no sean None o cadenas vacías
                 if not cod_ani:
@@ -1367,7 +1412,7 @@ def crear_compra(request):
                     cod_com=compra,
                     cod_ani=cod_ani,
                     edad_aniCom=edad_aniCom or 0,  # Valor por defecto 0 si está vacío
-                    peso_aniCom=peso_aniCom or 0,  # Valor por defecto 0 si está vacío
+                    peso_aniCom=peso_aniCom or 0,  # Puede ser None o un Decimal
                     precio_uni=precio_uni,
                 )
             
@@ -1811,6 +1856,14 @@ def ventas(request):
         for venta in ventas:
             venta.detalles = DetVen.objects.filter(cod_ven=venta.cod_ven)
         
+             # FORMATEAR EL PESO DE CADA DETALLE DE COMPRA
+            for detalle in venta.detalles:
+                if detalle.peso_aniven:
+                    # Formato con 2 decimales: 000,00
+                    detalle.peso_formateado = f"{detalle.peso_aniven:.2f}".replace('.', ',')
+                else:
+                    detalle.peso_formateado = "0,00"
+
         context = {
             'ventas': ventas,
             'proximo_codigo': 1,  # Valor por defecto, ajusta según tu lógica
@@ -1843,11 +1896,8 @@ def crear_venta(request):
 
             # Formatear correctamente el precio total
             precio_total_str = request.POST.get('precio_total', '0')
-            # Primero eliminamos todos los puntos (separadores de miles)
             precio_total_str = precio_total_str.replace('.', '')
-            # Luego reemplazamos la coma decimal por punto (si existe)
             precio_total_str = precio_total_str.replace(',', '.')
-            # Convertimos a float
             precio_total = float(precio_total_str)
             
             # Determinar el siguiente código de venta para este administrador
@@ -1855,6 +1905,33 @@ def crear_venta(request):
             ultima_venta = Venta.objects.filter(id_adm=usuario_id).order_by('-cod_ven').first()
             if ultima_venta:
                 siguiente_cod_ven = ultima_venta.cod_ven + 1
+            
+            # Validar que todos los animales seleccionados estén disponibles
+            codigos_animales_usados = []
+            for i in range(1, cantidad + 1):
+                cod_ani = request.POST.get(f'cod_ani_{i}', '')
+                
+                if not cod_ani:
+                    messages.error(request, f"Debe seleccionar un animal para la posición {i}")
+                    return redirect('ventas')
+                
+                # Verificar que el animal existe y está disponible (saludable)
+                try:
+                    animal = Animal.objects.get(
+                        cod_ani=cod_ani, 
+                        id_adm=usuario_id,
+                        estado='saludable'  # Ajusta según tu campo de estado
+                    )
+                except Animal.DoesNotExist:
+                    messages.error(request, f"El animal con código {cod_ani} no está disponible o no existe")
+                    return redirect('ventas')
+                
+                # Verificar que no se repita el mismo animal
+                if cod_ani in codigos_animales_usados:
+                    messages.error(request, f"El animal con código {cod_ani} ya fue seleccionado")
+                    return redirect('ventas')
+                
+                codigos_animales_usados.append(cod_ani)
             
             # Crear la venta
             venta = Venta.objects.create(
@@ -1868,39 +1945,95 @@ def crear_venta(request):
             
             # Procesar detalles de animales
             for i in range(1, cantidad + 1):
-                # Obtener valores con validación
                 cod_ani = request.POST.get(f'cod_ani_{i}', '')
                 edad_aniven = request.POST.get(f'edad_aniven_{i}', '0')
-                peso_aniven = request.POST.get(f'peso_aniven_{i}', '0')
                 
-                # Asegurar que los campos no sean None o cadenas vacías
-                if not cod_ani:
-                    messages.error(request, f"Código de animal es requerido para el animal {i}")
-                    continue
-                
-                # Formatear correctamente el precio unitario
+                # Manejar peso con soporte para formato con coma
+                peso_str = request.POST.get(f'peso_aniven_{i}', '0,00')
+                peso_aniven = None
+                if peso_str and peso_str.strip():
+                    try:
+                        peso_normalizado = peso_str.replace(',', '.')
+                        peso_aniven = Decimal(peso_normalizado)
+                        
+                        if peso_aniven <= 0:
+                            messages.error(request, f"Error: El peso del animal {i} debe ser mayor que cero.")
+                            continue
+                            
+                    except (ValueError, InvalidOperation):
+                        messages.error(request, f"Error: El peso del animal {i} debe ser un número válido (ej: 15,05 o 15.05).")
+                        continue
+
+                # Formatear precio unitario
                 precio_uni_str = request.POST.get(f'precio_uni_{i}', '0')
-                precio_uni_str = precio_uni_str.replace('.', '')  # Eliminar puntos de miles
-                precio_uni_str = precio_uni_str.replace(',', '.')  # Reemplazar coma decimal por punto
+                precio_uni_str = precio_uni_str.replace('.', '')
+                precio_uni_str = precio_uni_str.replace(',', '.')
                 precio_uni = float(precio_uni_str)
                 
-                # Crear el detalle de venta con valores por defecto si están vacíos
+                # Crear el detalle de venta
                 DetVen.objects.create(
                     cod_ven=venta,
                     cod_ani=cod_ani,
-                    edad_aniven=edad_aniven or 0,  # Valor por defecto 0 si está vacío
-                    peso_aniven=peso_aniven or 0,  # Valor por defecto 0 si está vacío
+                    edad_aniven=edad_aniven or 0,
+                    peso_aniven=peso_aniven or 0,
                     precio_uni=precio_uni,
                 )
+                
+                # Opcional: Cambiar el estado del animal a 'vendido'
+                try:
+                    animal = Animal.objects.get(cod_ani=cod_ani, id_adm=usuario_id)
+                    animal.estado = 'vendido'  # Ajusta según tu modelo
+                    animal.save()
+                except Animal.DoesNotExist:
+                    pass  # El animal ya fue validado anteriormente
             
             messages.success(request, "Venta registrada exitosamente")
             return redirect('ventas')
+            
         except Exception as e:
             messages.error(request, f"Error al registrar la venta: {str(e)}")
             return redirect('ventas')
     else:
         return redirect('ventas')
+
+@login_required
+def api_animales_disponibles(request):
+    """
+    API para obtener los códigos de animales disponibles con estado saludable
+    para el administrador actual.
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
     
+    try:
+        # Obtener el ID del administrador actual desde la sesión
+        usuario_id = request.session.get('usuario_id')
+        
+        if not usuario_id:
+            return JsonResponse({'error': 'Usuario no autenticado'}, status=401)
+        
+        # Obtener animales disponibles (estado saludable) del administrador actual
+        # Ajusta el nombre del modelo y campos según tu estructura
+        animales_disponibles = Animal.objects.filter(
+            id_adm=usuario_id,
+            estado='saludable'  # Ajusta el campo y valor según tu modelo
+        ).values('cod_ani', 'raza', 'peso', 'edad').order_by('cod_ani')
+        
+        # Convertir QuerySet a lista
+        animales_list = list(animales_disponibles)
+        
+        return JsonResponse({
+            'success': True,
+            'animales': animales_list,
+            'total': len(animales_list)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al obtener animales disponibles: {str(e)}'
+        }, status=500)
+     
 @login_required
 @transaction.atomic
 def editar_venta(request, cod_ven):

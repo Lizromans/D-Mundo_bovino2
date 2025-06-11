@@ -1,6 +1,39 @@
 // Contador de llamadas para depuración
 let contadorActualizaciones = 0;
 
+// Función para validar y formatear peso con coma decimal
+function validarYFormatearPeso(input) {
+    let valor = input.value.trim();
+    
+    if (!valor) {
+        return;
+    }
+    
+    // Permitir punto o coma como separador decimal
+    // Validar formato básico
+    const regexPeso = /^\d+([,.]\d{1,2})?$/;
+    
+    if (!regexPeso.test(valor)) {
+        input.setCustomValidity('Formato inválido. Use formato como: 15,50 o 15.50');
+        input.reportValidity();
+        return false;
+    }
+    
+    // Normalizar el valor (convertir coma a punto para validación)
+    const valorNormalizado = valor.replace(',', '.');
+    const pesoNumerico = parseFloat(valorNormalizado);
+    
+    if (isNaN(pesoNumerico) || pesoNumerico <= 0) {
+        input.setCustomValidity('El peso debe ser mayor que 0');
+        input.reportValidity();
+        return false;
+    }
+    
+    // Limpiar validación personalizada si todo está bien
+    input.setCustomValidity('');
+    return true;
+}
+
 // Función para actualizar el formulario de animales basado en la cantidad
 function actualizarFormularioAnimales() {
     // Contador para depuración
@@ -14,18 +47,13 @@ function actualizarFormularioAnimales() {
     const contenedor = document.getElementById('detalles_animales');
     if (!contenedor) {
         console.error('ERROR: No se encontró el elemento con ID "detalles_animales"');
-        // Buscar posibles contenedores alternativos que puedan estar siendo utilizados
-        const posiblesContenedores = document.querySelectorAll('[id="animal"],[id="detalle"],[class="animal"],[class="detalle"]');
-        if (posiblesContenedores.length > 0) {
-            console.warn('Posibles contenedores encontrados:', posiblesContenedores);
-        }
         return;
     }
 
     // Verificar si ya tiene contenido antes de limpiar
     console.log(`Contenido del contenedor antes de limpiar: ${contenedor.children.length} elementos`);
 
-    // Limpiar contenedor completamente - esta es la parte crítica
+    // Limpiar contenedor completamente
     contenedor.innerHTML = '';
 
     console.log(`Contenedor limpio: ${contenedor.children.length} elementos`);
@@ -36,7 +64,7 @@ function actualizarFormularioAnimales() {
         return;
     }
 
-    // Generar código inicial simple (puede ser modificado según necesidades)
+    // Generar código inicial simple
     let siguienteCodigo = 1;
 
     // Generar campos para cada animal
@@ -48,7 +76,7 @@ function actualizarFormularioAnimales() {
 
         const animalDiv = document.createElement('div');
         animalDiv.classList.add('card', 'mb-3', 'p-3');
-        animalDiv.dataset.animal = i; // Añadir data attribute para seguimiento
+        animalDiv.dataset.animal = i;
 
         animalDiv.innerHTML = `
             <h5 class="card-title">Animal #${i}</h5>
@@ -59,7 +87,7 @@ function actualizarFormularioAnimales() {
                 </div>
                 <div class="col-md-8">
                     <label for="edad_aniCom_${i}">Edad:</label>
-                    <select id="edad_aniCom_${i}" name="edad_aniCom_${i}" class="form-control" required>
+                    <select id="edad_aniCom_${i}" name="edad_aniCom_${i}" class="form-select" required>
                         <option value="" disabled selected>Selecciona una edad</option>
                         <option value="1-2">1 - 2 años</option>
                         <option value="2-3">2 - 3 años</option>
@@ -70,15 +98,16 @@ function actualizarFormularioAnimales() {
             <div class="row mt-2">
                 <div class="col-md-6">
                     <label for="peso_aniCom_${i}">Peso (kg):</label>
-                    <input type="number" id="peso_aniCom_${i}" name="peso_aniCom_${i}" class="form-control" 
-                           step="0.01" min="0" required onchange="calcularPrecioTotal()">
+                    <input type="text" id="peso_aniCom_${i}" name="peso_aniCom_${i}" class="form-control peso-input" 
+                           pattern="[0-9]+([,.][0-9]{1,2})?"
+                           required>
                 </div>
                 <div class="col-md-6">
                     <label for="precio_uni_${i}">Precio por animal:</label>
                     <div class="input-group">
                         <span class="input-group-text">$</span>
-                        <input type="text" id="precio_uni_${i}" name="precio_uni_${i}" class="form-control" 
-                               required onchange="formatearPrecioCOP(this); calcularPrecioTotal()">
+                        <input type="text" id="precio_uni_${i}" name="precio_uni_${i}" class="form-control precio-input" 
+                               required placeholder="Precio unitario">
                     </div>
                 </div>
             </div>
@@ -87,6 +116,26 @@ function actualizarFormularioAnimales() {
     }
 
     console.log(`Generación completada. Contenedor ahora tiene ${contenedor.children.length} elementos`);
+
+    // Agregar event listeners a los campos de peso recién creados
+    contenedor.querySelectorAll('.peso-input').forEach(input => {
+        input.addEventListener('blur', function() {
+            validarYFormatearPeso(this);
+        });
+        
+        input.addEventListener('input', function() {
+            // Limpiar validación mientras escribe
+            this.setCustomValidity('');
+        });
+    });
+
+    // Agregar event listeners a los campos de precio recién creados
+    contenedor.querySelectorAll('.precio-input').forEach(input => {
+        input.addEventListener('change', function() {
+            formatearPrecioCOP(this);
+            calcularPrecioTotal();
+        });
+    });
 
     // Actualizar formato del campo de precio total
     const precioTotalInput = document.getElementById('precio_total');
@@ -129,6 +178,11 @@ function formatearPrecioCOP(input) {
             input.value = '';
         }
     }
+}
+
+// Función para validar peso en formularios de edición
+function validarPesoEdicion(input) {
+    return validarYFormatearPeso(input);
 }
 
 // Función para calcular el precio total basado en los precios unitarios
@@ -206,14 +260,6 @@ function verificarEstructuraHTML() {
     const contenedor = document.getElementById('detalles_animales');
     if (!contenedor) {
         console.error('No se encontró el contenedor de detalles (ID: detalles_animales)');
-        // Buscar posibles contenedores alternativos
-        document.querySelectorAll('div').forEach(div => {
-            if (div.children && div.children.length > 0 && 
-                Array.from(div.children).some(child => 
-                    child.textContent && child.textContent.includes('Animal #'))) {
-                console.warn('Posible contenedor de animales encontrado:', div);
-            }
-        });
     } else {
         console.log(`Contenedor de detalles encontrado, contiene ${contenedor.children.length} elementos`);
     }
@@ -291,6 +337,17 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 console.error('No se encontró data-compra en el input:', this);
             }
+        });
+    });
+
+    // Agregar validación de peso a campos de edición existentes
+    document.querySelectorAll('input[name^="peso_anicom_"]').forEach(input => {
+        input.addEventListener('blur', function() {
+            validarPesoEdicion(this);
+        });
+        
+        input.addEventListener('input', function() {
+            this.setCustomValidity('');
         });
     });
     
