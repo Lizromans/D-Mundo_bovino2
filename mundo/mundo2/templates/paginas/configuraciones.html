@@ -52,27 +52,39 @@
                 <div class="modulos-grid">
                     <div class="modulo-item">
                         <input type="checkbox" id="inventario" name="inventario" {% if perfil.modulo_inventario %}checked{% endif %}>
-                        <label for="inventario">Inventario</label>
+                        <label for="inventario">
+                            <span class="module-text">Inventario</span>
+                        </label>
                     </div>
                     <div class="modulo-item">
                         <input type="checkbox" id="registroVentas" name="registroVentas" {% if perfil.modulo_ventas %}checked{% endif %}>
-                        <label for="registroVentas">Registro de Ventas</label>
+                        <label for="registroVentas">
+                            <span class="module-text">Registro de Ventas</span>
+                        </label>
                     </div>
                     <div class="modulo-item">
                         <input type="checkbox" id="registroCompras" name="registroCompras" {% if perfil.modulo_compras %}checked{% endif %}>
-                        <label for="registroCompras">Registro de Compras</label>
+                        <label for="registroCompras">
+                            <span class="module-text">Registro de Compras</span>
+                        </label>
                     </div>
                     <div class="modulo-item">
                         <input type="checkbox" id="calendario" name="calendario" {% if perfil.modulo_calendario %}checked{% endif %}>
-                        <label for="calendario">Calendario</label>
+                        <label for="calendario">
+                            <span class="module-text">Calendario</span>
+                        </label>
                     </div>
                     <div class="modulo-item">
                         <input type="checkbox" id="documentos" name="documentos" {% if perfil.modulo_documentos %}checked{% endif %}>
-                        <label for="documentos">Documentos</label>
+                        <label for="documentos">
+                            <span class="module-text">Documentos</span>
+                        </label>
                     </div>
-                    <div class="modulo-item">
+                    <div class="modulo-item" >
                         <input type="checkbox" id="contactos" name="contactos" {% if perfil.modulo_agenda %}checked{% endif %}>
-                        <label for="contactos">Agenda</label>
+                        <label for="contactos">
+                            <span class="module-text">Contactos</span>
+                        </label>
                     </div>
                 </div>
             </div>

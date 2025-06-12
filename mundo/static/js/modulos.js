@@ -114,8 +114,9 @@ function actualizarEstadoBoton() {
     if (!btnGuardar) return;
     
     if (cambiosPendientes) {
-        btnGuardar.style.background = '#947643';
-        btnGuardar.style.boxShadow = '0 0 10px rgba(148, 118, 67, 0.5)';
+        btnGuardar.style.background = '#D3B177';
+        btnGuardar.style.boxShadow = '0 0 10px #D3B177';
+        btnGuardar.style.color= '#000000'
         btnGuardar.innerHTML = 'Guardar Cambios';
         btnGuardar.classList.add('cambios-pendientes');
     } else {
@@ -195,61 +196,6 @@ function guardarCambios() {
     
     // Mostrar notificación de éxito
     mostrarNotificacion('success', 'Cambios guardados correctamente');
-}
-
-// Función para mostrar notificaciones (CORREGIDA)
-function mostrarNotificacion(tipo, mensaje) {
-    // Remover notificación anterior si existe
-    const notifAnterior = document.querySelector('.modulo-notification');
-    if (notifAnterior) {
-        notifAnterior.remove();
-    }
-    
-    const iconos = {
-        success: 'check-circle',
-        info: 'info-circle',
-        warning: 'exclamation-triangle',
-        error: 'times-circle'
-    };
-    
-    // CREAR el elemento notificación
-    const notif = document.createElement('div');
-    notif.className = 'modulo-notification';
-    notif.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${tipo === 'success' ? '#28a745' : tipo === 'error' ? '#dc3545' : '#17a2b8'};
-        color: white;
-        padding: 15px 20px;
-        border-radius: 5px;
-        z-index: 9999;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    `;
-    
-    notif.innerHTML = `
-        <i class="fas fa-${iconos[tipo]}" style="margin-right: 10px;"></i>
-        ${mensaje}
-    `;
-    
-    document.body.appendChild(notif);
-    
-    // Animar entrada
-    setTimeout(() => {
-        notif.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Remover después de 4 segundos
-    setTimeout(() => {
-        notif.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (notif.parentNode) {
-                notif.parentNode.removeChild(notif);
-            }
-        }, 300);
-    }, 4000);
 }
 
   // Interceptar el botón de guardar originalAdd commentMore actions
@@ -361,9 +307,6 @@ window.descartarCambiosYContinuar = descartarCambiosYContinuar;
 window.guardarTodoYContinuar = guardarTodoYContinuar;
 window.cerrarModalConfirmacion = cerrarModalConfirmacion;
 
-// Función para crear botón de descartar - REMOVIDA
-// Esta función fue removida por solicitud del usuario
-
 // Función principal de inicialización
 function inicializar() {
     // Siempre actualizar el menú al cargar
@@ -411,3 +354,72 @@ window.ModulosDebug = {
         console.log('Estado guardado:', getModulosEstado());
     }
 };
+
+// Agregar esta función después de handleCheckboxChange
+function actualizarEstiloModulo(checkbox) {
+    const moduloItem = checkbox.closest('.modulo-item');
+    if (moduloItem) {
+        const span = moduloItem.querySelector('.module-text');
+        
+        if (!checkbox.checked) {
+            // Aplicar estilo gris solo al checkbox y span
+            checkbox.classList.add('modulo-desactivado');
+            if (span) {
+                span.classList.add('modulo-desactivado');
+            }
+        } else {
+            // Remover estilo gris del checkbox y span
+            checkbox.classList.remove('modulo-desactivado');
+            if (span) {
+                span.classList.remove('modulo-desactivado');
+            }
+        }
+    }
+}
+
+// Función para aplicar estilos iniciales basados en el estado actual
+function aplicarEstilosIniciales() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        actualizarEstiloModulo(checkbox);
+    });
+}
+
+// Función para mantener estilos después de guardar
+function mantenerEstilosDespuesDeGuardar() {
+    // Aplicar estilos basados en el estado actual después de guardar
+    aplicarEstilosIniciales();
+}
+
+// Modificar handleCheckboxChange para incluir el estilo
+function handleCheckboxChange(checkbox, moduloKey) {
+    // Código existente...
+    estadoTemporal[moduloKey] = checkbox.checked;
+    cambiosPendientes = true;
+    
+    // Actualizar visual del botón para indicar cambios pendientes
+    actualizarEstadoBoton();
+    
+    // NUEVO: Actualizar estilo del módulo
+    actualizarEstiloModulo(checkbox);
+    
+    // Agregar clase visual al checkbox modificado
+    const moduloItem = checkbox.closest('.modulo-item');
+    if (moduloItem) {
+        moduloItem.classList.add('modificado');
+    }
+}
+
+// Llamar esta función al cargar la página para aplicar estilos iniciales
+document.addEventListener('DOMContentLoaded', function() {
+    aplicarEstilosIniciales();
+});
+
+// Llamar esta función después de guardar los cambios exitosamente
+// (agregar esta línea en tu función de guardar después del éxito)
+function despuesDeGuardarExitoso() {
+    // Tu código existente de éxito...
+    
+    // Mantener estilos después de guardar
+    mantenerEstilosDespuesDeGuardar();
+}
