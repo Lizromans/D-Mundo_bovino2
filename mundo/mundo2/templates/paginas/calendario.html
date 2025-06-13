@@ -123,14 +123,14 @@
                   <form method="get" style="display:inline;">
                       <input type="hidden" name="month" value="{{ mes_anterior }}">
                       <button type="submit" class="btn-prev">
-                          <img src="{% static 'img/prev.png' %}" alt="prev" id="prev">
+                          &lt;
                       </button>
                   </form>
                   <h5>{{ nombre_mes }} {{ año_actual }}</h5>
                   <form method="get" style="display:inline;">
                       <input type="hidden" name="month" value="{{ mes_siguiente }}">
                       <button type="submit" class="btn-next">
-                          <img src="{% static 'img/next.png' %}" alt="next" id="next">
+                          &gt;
                       </button>
                   </form>
               </div>

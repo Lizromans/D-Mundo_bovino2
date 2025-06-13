@@ -78,7 +78,7 @@
     margin-top: 2%;
     margin-bottom: 3%;
     width: 100%;
-    margin-left: 18%;
+    margin-left: 18.1%;
 }
 
 .navbar-form .form-control {
@@ -93,6 +93,7 @@
     position: relative;
     display: inline-block;
     margin-right: 1.6%;
+
 }
 
 .lupa {
@@ -114,11 +115,15 @@ button {
     color: inherit;
 }
 
+.btn-guardar{
+    margin-left: -2%;
+}
+
 .agregar {
     width: 30px;
     height: 30px;
     cursor: pointer;
-    margin-top: 10%;
+    margin-top: 9.9%;
 }
 
 .agregar:hover {

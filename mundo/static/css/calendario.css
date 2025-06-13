@@ -53,7 +53,7 @@ button {
     flex-direction: row;
     gap: 30px;
     justify-content: space-between;
-    margin-bottom: 8.3%;
+    margin-bottom: 7.3%;
     margin-right: 10%;
 }
 
@@ -304,7 +304,8 @@ button {
     border: 2px solid #a3a3a377;
     border-radius: 50%;
     height: 3em;
-    font-size: .75em;
+    font-size: .79em;
+    color: #838181da;
     line-height: 2em;
     width: 3em;
     cursor: pointer;
@@ -318,12 +319,6 @@ button {
 .btn-next:hover {
     background: #a3a3a3a9;
     color: #f9f9f9;
-}
-
-.btn-prev img,
-.btn-next img {
-    max-width: 50%;
-    max-height: 50%;
 }
 
 /* ========================
@@ -824,7 +819,7 @@ textarea.form-control {
    15. FILTRADO Y BÚSQUEDA
    ======================== */
 .filtrado-container {
-    margin-left: 85%;
+    margin-left: 82%;
     padding: 2px;
 
 }

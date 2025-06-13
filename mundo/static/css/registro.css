@@ -212,11 +212,59 @@ input[type="password"] {
     height: 28px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     width: 320px;
- 
 }
+
+/* Contenedor para input con icono */
+.input-con-icono {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Estilos para el icono de mostrar/ocultar contraseña */
+#toggleIcon_password {
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 14px;
+    transition: color 0.3s ease;
+    z-index: 2;
+}
+
+.password-toggle-icon:hover {
+    color: var(--color-secundario);
+}
+
+.password-toggle-icon i {
+    transition: all 0.3s ease;
+}
+
+.fas.fa-eye {
+    color: #66666694!important;
+}
+
+.fas.fa-eye-slash {
+    color: #66666694!important;
+}
+
 /* Nuevo estilo para los contenedores de inputs y labels */
 .form-group {
     position: relative;
+}
+
+#toggleIcon_confpassword {
+    position: absolute;
+    top: 72%;
+    right: 23px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 14px;
+    transition: color 0.3s ease;
+    z-index: 2;
 }
 
 /* Nuevo estilo para los mensajes de error */

@@ -14,8 +14,16 @@ class AdministradorRegistroForm(forms.ModelForm):
             'nom_usu': forms.TextInput(attrs={'class': 'form-control', 'id': 'username'}),
             'correo': forms.EmailInput(attrs={'class': 'form-control', 'id': 'email'}),
             'finca': forms.TextInput(attrs={'class': 'form-control', 'id': 'finca'}),
-            'contraseña': forms.PasswordInput(attrs={'class': 'form-control', 'id': 'password'}),
-            'confcontraseña': forms.PasswordInput(attrs={'class': 'form-control', 'id': 'confirm-password'}),
+            'contraseña': forms.PasswordInput(attrs={
+                'class': 'form-control', 
+                'id': 'password',
+                'data-toggle': 'password'
+            }),
+            'confcontraseña': forms.PasswordInput(attrs={
+                'class': 'form-control', 
+                'id': 'confpassword',
+                'data-toggle': 'password'
+            }),
         }
         labels = {
             'nom_usu': 'Nombre de Usuario',
@@ -24,7 +32,7 @@ class AdministradorRegistroForm(forms.ModelForm):
             'contraseña': 'Contraseña',
             'confcontraseña': 'Confirmar Contraseña',
         }
-    
+
     def clean(self):
         cleaned_data = super().clean()
         contraseña = cleaned_data.get('contraseña')
@@ -34,7 +42,7 @@ class AdministradorRegistroForm(forms.ModelForm):
             raise ValidationError("Las contraseñas no coinciden")
         
         return cleaned_data
-    
+
     def clean_correo(self):
         correo = self.cleaned_data.get('correo')
         if Administrador.objects.filter(correo=correo).exists():
@@ -52,13 +60,13 @@ class AdministradorRegistroForm(forms.ModelForm):
         if len(contraseña) < 8:
             raise ValidationError("La contraseña debe tener al menos 8 caracteres")
         return contraseña
-    
+
     def clean_finca(self):
         finca = self.cleaned_data.get('finca')
         if len(finca) < 2:
             raise ValidationError("El nombre de la finca debe tener al menos 2 caracteres")
         return finca
-    
+
     def save(self, commit=True):
         administrador = super().save(commit=False)
         
