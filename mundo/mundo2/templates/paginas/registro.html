@@ -62,7 +62,7 @@
                     <label for="email">Email *</label>
                     {{ form.correo }}
                     {% if form.correo.errors %}
-                        <div class="error-container">{{ form.correo.errors }}</div>
+                        <div class="error-correo">{{ form.correo.errors }}</div>
                     {% endif %}
                     <small class="form-text text-muted">Se enviará un enlace de verificación a este correo.</small>
                 </div>
@@ -90,7 +90,7 @@
                         </span>
                     </div>
                     {% if form.contraseña.errors %}
-                        <div class="error-container">{{ form.contraseña.errors }}</div>
+                        <div class="error-contra">{{ form.contraseña.errors }}</div>
                     {% endif %}
                     <small class="form-text text-muted">La contraseña debe tener al menos 8 caracteres.</small>
                 </div>
@@ -110,14 +110,198 @@
                         <div class="error-container">{{ form.confcontraseña.errors }}</div>
                     {% endif %}
                 </div>
+
+                <!-- Términos y Condiciones -->
+                <div class="form-group m-1">
+                    <div class="form-check">
+                        <input type="checkbox" 
+                            class="form-check-input" 
+                            id="aceptar-terminos" 
+                            name="aceptar_terminos" 
+                            required>
+                        <label class="form-check-label" for="aceptar-terminos">
+                            He leído y acepto los <span class="terminos-link" onclick="abrirModalTerminos()">Términos y Condiciones Generales</span> para el uso del software de gestión ganadera Mundo Bovino. *
+                        </label>
+
+                        <div class="error-terminos">
+                            Debes aceptar los términos y condiciones para continuar.
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group m-2">
                     <input type="submit" value="Registrarse">
                 </div>
             </form>
         </div>
     </div>
-    
+
+    <!-- Modal de Términos y Condiciones -->
+    <div id="modal-terminos" class="modal-terminos">
+        <div class="modal-content-terminos">
+            <div class="modal-header-terminos">
+                <h2>Términos y Condiciones Generales</h2>
+                <span class="close-modal" onclick="cerrarModalTerminos()">&times;</span>
+            </div>
+            <div class="modal-body-terminos">                
+                <h3>1. ALCANCE</h3>
+                <h4>1.1 Aplicación de los términos</h4>
+                <p>Los presentes términos y condiciones generales ("Condiciones Generales"), a menos que se acuerde lo contrario, regirán las ofertas y contratos ("Oferta" y "Contrato") de licencias de software de gestión ganadera ("Software") presentados o suscritos por Mundo Bovino y serán considerados parte integrante de tales ofertas y contratos.</p>
+                
+                <h4>1.2 Prevalencia</h4>
+                <p>Estos Términos y Condiciones Generales prevalecerán sobre cualquier término y condición utilizado por el cliente ganadero ("Cliente") que reciba una Oferta o suscriba un Contrato con Mundo Bovino. Cuando en estos Términos y Condiciones Generales se haga referencia al "Contrato", se entenderá que también están incluidos los Términos y Condiciones Generales.</p>
+                
+                <h4>1.3 Vigencia de ofertas</h4>
+                <p>Las Ofertas presentadas por Mundo Bovino solo son válidas durante un período de 30 (treinta) días calendario a partir de su fecha de emisión. Si el Cliente no acepta la Oferta dentro del plazo señalado, la Oferta vencerá automáticamente. Si el Cliente acepta la Oferta en su totalidad dentro del plazo señalado, la Oferta pasará a ser un Contrato.</p>
+                
+                <h3>2. ENTREGA</h3>
+                <h4>2.1 Modalidad de entrega</h4>
+                <p>Mundo Bovino entregará el acceso al Software mediante credenciales de ingreso a la plataforma en la nube. El Software se considera entregado una vez que se proporcionan las credenciales de acceso y el Cliente puede ingresar exitosamente al sistema.</p>
+                
+                <h4>2.2 Documentación incluida</h4>
+                <p>Junto con el acceso al Software, se proporcionará el manual de usuario y acceso a video tutoriales para el correcto uso del sistema de gestión ganadera.</p>
+                
+                <h3>3. LICENCIA</h3>
+                <h4>3.1 Concesión de licencia</h4>
+                <p>Mundo Bovino concede al Cliente un derecho limitado, no exclusivo e intransferible, a utilizar el Software para la gestión de su finca o empresa ganadera únicamente según los términos establecidos en el Contrato ("Licencia").</p>
+                
+                <h4>3.2 Actualizaciones del software</h4>
+                <p>Mundo Bovino se reserva el derecho a modificar las especificaciones del Software, incluyendo actualizaciones, corrección de errores y nuevas funcionalidades del Software, las cuales se aplicarán automáticamente y se considerarán parte del Software.</p>
+                
+                <h4>3.3 Seguridad informática</h4>
+                <p>Mundo Bovino garantiza que mantiene medidas de seguridad informática acordes con las mejores prácticas de la industria para proteger el Software y los datos almacenados, incluyendo verificación continua contra código malicioso y amenazas de seguridad.</p>
+                
+                <h4>3.4 Reconocimientos del cliente</h4>
+                <p>El Cliente acepta y reconoce lo siguiente:</p>
+                
+                <h4>3.4.1 Propósito específico</h4>
+                <p>El Software ha sido desarrollado para la gestión general de datos ganaderos y, por lo tanto, el Cliente asume la responsabilidad de verificar que las características y funciones del Software cumplan sus necesidades específicas de manejo ganadero.</p>
+                
+                <h4>3.4.2 Responsabilidad de conectividad</h4>
+                <p>Mundo Bovino no será responsable por la conectividad a internet del Cliente, ni por interrupciones en el servicio causadas por problemas de conectividad externos a la plataforma.</p>
+                
+                <h4>3.4.3 Limitaciones del software</h4>
+                <p>Aunque Mundo Bovino ha desarrollado el Software siguiendo las mejores prácticas, es posible que contenga errores menores, y el Cliente acepta que la existencia de errores menores no constituirá un incumplimiento del Contrato.</p>
+                
+                <h4>3.4.4 Derechos sobre el software</h4>
+                <p>El Cliente no tiene ningún derecho de propiedad sobre el Software, salvo el derecho a utilizarlo de acuerdo con los términos de la Licencia.</p>
+                
+                <h3>4. PRECIOS Y CONDICIONES DE PAGO</h3>
+                <h4>4.1 Impuestos y gravámenes</h4>
+                <p>Los precios establecidos en el Contrato no incluyen el Impuesto al Valor Agregado (IVA) ni otros impuestos, tasas o contribuciones que puedan ser aplicables según la legislación colombiana vigente.</p>
+                
+                <h4>4.2 Cambios de precio</h4>
+                <p>Mundo Bovino tendrá derecho a cambiar sus precios en cualquier momento, con un aviso previo de treinta (30) días calendario. Los cambios de precio no afectarán contratos ya suscritos durante su vigencia.</p>
+                
+                <h4>4.3 Modalidad de pago</h4>
+                <p>El Cliente deberá realizar el pago completo de la licencia al momento de la suscripción del contrato, previo a la entrega de las credenciales de acceso. Se aceptan todos los métodos de pago disponibles (transferencia bancaria, tarjetas de crédito, PSE, etc.).</p>
+                
+                <h4>4.4 Mora en el pago</h4>
+                <p>Si aplicare algún pago adicional por servicios complementarios y el Cliente no cumpliere con el pago en las fechas establecidas, se aplicará una tasa de interés de mora equivalente a 1.5 veces la tasa de interés bancario corriente certificada por la Superintendencia Financiera de Colombia.</p>
+                
+                <h4>4.5 Pagos sin compensación</h4>
+                <p>El Cliente pagará todas las cantidades debidas en su totalidad sin compensación, reconvención, deducción o retención, excepto aquellas requeridas por ley.</p>
+                
+                <h3>5. CALIDAD Y GARANTÍAS</h3>
+                <h4>5.1 Garantía de funcionamiento</h4>
+                <p>Mundo Bovino garantiza que, a partir de la entrega y durante un período de doce (12) meses ("Período de Garantía"), el Software funcionará de acuerdo con las especificaciones publicadas en los manuales y documentación técnica proporcionada.</p>
+                
+                <h4>5.2 Limitaciones de la garantía</h4>
+                <p>Mundo Bovino no garantiza que el uso del Software por parte del Cliente sea completamente ininterrumpido o esté absolutamente libre de errores, considerando la naturaleza de los sistemas informáticos y las conectividades de internet.</p>
+                
+                <h4>5.3 Material publicitario</h4>
+                <p>Todo material descriptivo o publicitario emitido por Mundo Bovino se publica únicamente para dar una idea general del Software y no formará parte del Contrato ni tendrá fuerza contractual.</p>
+                
+                <h4>5.4 Remedios por defectos</h4>
+                <p>Si durante el Período de Garantía el Cliente informa por escrito a Mundo Bovino sobre algún defecto material en el Software, Mundo Bovino deberá, a su elección:</p>
+                <ul>
+                    <li>5.4.1 Reparar el Software;</li>
+                    <li>5.4.2 Sustituir el acceso al Software; o</li>
+                    <li>5.4.3 Rescindir el Contrato y reembolsar proporcionalmente el valor pagado menos el uso efectivo del Software hasta la fecha de rescisión.</li>
+                </ul>
+                
+                <h4>5.5 Exclusiones de garantía</h4>
+                <p>Mundo Bovino no será responsable por fallas en la garantía cuando:</p>
+                <ul>
+                    <li>5.5.1 El Cliente continúe usando el Software después de reportar el defecto;</li>
+                    <li>5.5.2 El defecto surja por uso inadecuado del Software contrario a las instrucciones proporcionadas;</li>
+                    <li>5.5.3 El Cliente use el Software fuera de los términos del Contrato o lo combine con software no autorizado;</li>
+                    <li>5.5.4 El Software sea modificado por terceros no autorizados por Mundo Bovino.</li>
+                </ul>
+                
+                <h4>5.6 Renuncia de otras garantías</h4>
+                <p><strong>MUNDO BOVINO NO ASUME NINGUNA GARANTÍA EXPRESA O IMPLÍCITA ADICIONAL SOBRE LA CALIDAD O ADECUACIÓN DEL SOFTWARE PARA PROPÓSITOS ESPECÍFICOS MÁS ALLÁ DE LO ESTABLECIDO EN ESTA CLÁUSULA.</strong></p>
+                
+                <h3>6. RESPONSABILIDAD DEL PRODUCTO</h3>
+                <h4>6.1 Limitaciones específicas del sector ganadero</h4>
+                <p>Mundo Bovino no será responsable por daños, costos o pérdidas causados por el uso del Software e incurridos por el Cliente o cualquier tercero en relación con:</p>
+                <ul>
+                    <li>6.1.1 Decisiones de manejo ganadero basadas en la información del Software;</li>
+                    <li>6.1.2 Pérdidas de ganado, reducción en producción o problemas sanitarios;</li>
+                    <li>6.1.3 Daños a instalaciones, equipos, o infraestructura ganadera;</li>
+                    <li>6.1.4 Visualización informativa de los portales del ICA, FEDEGAN y CONTEXTO GANADERO, proporcionando acceso a información clave para los usuarios. Estos sitios ofrecen recursos actualizados sobre normativas, prácticas ganaderas y noticias del sector, facilitando la consulta y el aprendizaje continuo.
+                        <ul>
+                            <li><a href="https://www.ica.gov.co/" target="_blank">www.ica.gov.co/</a></li>
+                            <li><a href="https://www.fedegan.org.co" target="_blank">www.fedegan.org.co</a></li>
+                            <li><a href="https://www.contextoganadero.com/" target="_blank">www.contextoganadero.com/</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <h4>6.2 Exclusión de responsabilidad por proyecciones</h4>
+                <p><strong>EL SOFTWARE NO PUEDE REALIZAR PROYECCIONES DE COSTOS Y PRODUCCIÓN QUE DEPENDAN DE FACTORES EXTERNOS COMO EL MERCADO, EL CLIMA Y LA GESTIÓN INDIVIDUAL. TAMPOCO PUEDE BRINDAR RESULTADOS FINANCIEROS EXACTOS NI OFRECER HERRAMIENTAS DE ANÁLISIS QUE GARANTICEN PREDICCIONES PRECISAS. SU FUNCIÓN ES PROPORCIONAR APOYO EN LA ORGANIZACIÓN Y GESTIÓN DE DATOS, PERO LAS DECISIONES FINALES DEBEN BASARSE EN LA EVALUACIÓN Y CRITERIO DEL USUARIO.</strong></p>
+                
+                <h4>6.3 Indemnización del cliente</h4>
+                <p>El Cliente indemnizará y mantendrá a Mundo Bovino libre de toda reclamación, pérdida y gasto (incluidos honorarios legales) que surjan de una acción presentada por un tercero contra Mundo Bovino con respecto al uso del Software por parte del Cliente.</p>
+                
+                <h3>7. LIMITACIÓN DE LA RESPONSABILIDAD</h3>
+                <h4>7.1 Exclusión de daños indirectos</h4>
+                <p>Mundo Bovino no será responsable ante el Cliente, ya sea por contrato, responsabilidad extracontractual (incluyendo negligencia), incumplimiento de deberes legales, o de otro tipo, que surjan en virtud o en relación con el Contrato por:</p>
+                <ul>
+                    <li>7.1.1 Pérdida de ganancias, ventas o negocios ganaderos;</li>
+                    <li>7.1.2 Pérdida de contratos de venta de ganado o productos lácteos;</li>
+                    <li>7.1.3 Pérdida de ahorros anticipados o proyecciones financieras;</li>
+                    <li>7.1.4 Pérdida o corrupción de datos ganaderos almacenados;</li>
+                    <li>7.1.5 Pérdida de prestigio o fondo de comercio de la finca;</li>
+                    <li>7.1.6 Daños punitivos o cualquier otra pérdida indirecta o consecuente.</li>
+                </ul>
+                
+                <h4>7.2 Límite máximo de responsabilidad</h4>
+                <p>La responsabilidad total de Mundo Bovino hacia el Cliente, independientemente de la causa de acción, se limitará al menor valor entre:</p>
+                <ul>
+                    <li>Dos millones de pesos colombianos (COP $2.000.000); o</li>
+                    <li>El cincuenta por ciento (50%) del valor total pagado por el Cliente bajo el Contrato.</li>
+                </ul>
+                
+                <h4>7.3 Excepciones legales</h4>
+                <p>Ninguna disposición del contrato limitará o excluirá la responsabilidad de Mundo Bovino en los asuntos en que resultará ilegal restringir o excluir su responsabilidad conforme a la legislación colombiana vigente.</p>
+                
+                <h3>8. OBLIGACIONES DEL CLIENTE</h3>
+                <h4>8.1 El Cliente se compromete con Mundo Bovino a:</h4>
+                <ul>
+                    <li>8.1.1 <strong>Información completa y exacta:</strong> Asegurarse de que la información sobre su operación ganadera proporcionada a Mundo Bovino sea completa y exacta.</li>
+                    <li>8.1.2 <strong>Cooperación:</strong> Cooperar con Mundo Bovino en los asuntos relacionados con el Software y el soporte técnico.</li>
+                    <li>8.1.3 <strong>Cumplimiento legal:</strong> Cumplir todas las leyes y reglamentos aplicables, incluidas las normativas del ICA, (<a href="https://www.ica.gov.co/normatividad/normas-ica" target="_blank">www.ica.gov.co/normatividad/normas-ica</a>), FEDEGAN (<a href="https://www.fedegan.org.co/normatividad" target="_blank">https://www.fedegan.org.co/normatividad</a>), CONTEXTO GANADERO (<a href="https://www.contextoganadero.com/PoliticaEmpresarioView/politicaprivacidad" target="_blank">https://www.contextoganadero.com/PoliticaEmpresarioView/politicaprivacidad</a>) y demás entidades reguladoras del sector ganadero en Colombia.</li>
+                    <li>8.1.4 <strong>Uso adecuado:</strong> Utilizar el Software de acuerdo con las instrucciones del manual de usuario y los video tutoriales proporcionados por Mundo Bovino.</li>
+                    <li>8.1.5 <strong>Documentación de cumplimiento:</strong> Proporcionar documentación sobre el cumplimiento de los términos de la Licencia en un máximo de cinco (5) días hábiles cuando Mundo Bovino lo solicite.</li>
+                    <li>8.1.6 <strong>Prohibición de copia:</strong> No copiar, reproducir o duplicar el Software excepto cuando sea necesario para su funcionamiento normal o como respaldo de seguridad.</li>
+                    <li>8.1.7 <strong>Prohibición de transferencia:</strong> No alquilar, arrendar, sublicenciar, vender o transferir el acceso al Software a terceros.</li>
+                    <li>8.1.8 <strong>Prohibición de modificación:</strong> No realizar alteraciones, modificaciones o intentar combinar el Software con otros sistemas sin autorización expresa de Mundo Bovino.</li>
+                    <li>8.1.9 <strong>Prohibición de ingeniería inversa:</strong> No desensamblar, aplicar ingeniería inversa ni crear obras derivadas basadas en el Software.</li>
+                    <li>8.1.10 <strong>Seguridad de acceso:</strong> Mantener seguras las credenciales de acceso y notificar inmediatamente a Mundo Bovino sobre cualquier uso no autorizado.</li>
+                    <li>8.1.11 <strong>Actualizaciones automáticas:</strong> Permitir y no interferir con las actualizaciones automáticas del Software.</li>
+                    <li>8.1.12 <strong>Uso exclusivo autorizado:</strong> No proporcionar o poner a disposición el Software a personas no autorizadas fuera de su operación ganadera.</li>
+                    <li>8.1.13 <strong>Cumplimiento adicional:</strong> Cumplir con cualquier otra obligación establecida específicamente en el Contrato.</li>
+                </ul>
+                
+                <h4>8.2 Consecuencias del incumplimiento del cliente</h4>
+                <p>En caso de incumplimiento por parte del Cliente:</p>
+                <ul>
+                    <li>8.2.1 Mundo Bovino podrá suspender el acceso al Software hasta que se remedie el incumplimiento;</li>
+                    <li>8.2.2 Mundo Bovino no será responsable por costos o pérdidas derivadas de dicha suspensión;</li>
+                    <li>8.2.3 El Cliente reembolsará a Mundo Bovino los costos incurridos como consecuencia del incumplimiento.</li>
+
     <script src="{% static 'js/mensajes.js' %}"></script>
     <script src="{% static 'js/registro.js' %}"></script>
-
+    <script src="{% static 'js/terminos.js' %}"></script>
 {% endblock %}

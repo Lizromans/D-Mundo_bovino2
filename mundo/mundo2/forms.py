@@ -77,3 +77,4 @@ class AdministradorRegistroForm(forms.ModelForm):
             administrador.save()
         
         return administrador
+    

@@ -195,8 +195,7 @@ input[type="submit"] {
     cursor: pointer;
     width: 320px;
     margin-left: 5px;
-    margin-top: 10px;
-    color: n;
+    margin-top: 3px;
 }
 
 input[type="submit"]:hover {
@@ -287,8 +286,27 @@ input[type="password"] {
     justify-content: center;
 }
 
+.error-correo, .error-contra {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    font-size: 10px;
+    padding: 4px 8px;
+    position: absolute;
+    left: -160px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 150px;
+    z-index: 10;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* Flecha para el contenedor de error */
-.error-container:after {
+.error-container:after, .error-correo::after, .error-contra::after {
     content: '';
     position: absolute;
     right: -10px;
@@ -300,13 +318,13 @@ input[type="password"] {
 }
 
 /* Eliminar viñetas y estilos default de listas de errores */
-.error-container ul {
+.error-container ul, .error-correo ul, .error-contra ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 
-.error-container li {
+.error-container li, .error-correo li, .error-contra li {
     padding: 0;
     margin: 0;
 }
@@ -367,6 +385,268 @@ input[type="password"] {
     0% { transform: scale(0.7); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
 }
+
+/* Estilos para los términos y condiciones */
+.terminos-container {
+    margin-top: 2px; /* Reducido de 10px a 5px */
+}
+
+.terminos-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.form-check-input { 
+    appearance: none; 
+    -webkit-appearance: none; 
+    width: 12px; 
+    height: 12px; 
+    border: 1px solid #ccc; 
+    border-radius: 3px; 
+    outline: none; 
+    cursor: pointer; 
+    position: relative; 
+    background-color: #fff; 
+    border: 1px solid #ccc; 
+    vertical-align: middle;
+} 
+
+.form-check-input:checked { 
+    background-color: #947643; 
+    border-color: #947643; 
+}
+
+.form-check-label {
+    color: #000000;
+    font-size: 10px;
+    margin-left: 5px;
+    vertical-align: middle;
+    display: inline-block;
+    margin-top: 1%;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    margin-top: -1%;
+}
+
+.form-check-input:checked::after { 
+    content: '';
+    position: absolute; 
+    width: 4px; 
+    height: 8px; 
+    border-width: 0 2px 2px 0; 
+    transform: rotate(45deg); 
+}
+
+/* Nuevo estilo para los contenedores de inputs y labels */
+.form-group {
+    position: relative;
+}
+
+.terminos-text {
+    font-size: 11px; /* Letra más pequeña */
+    line-height: 1.3;
+    color: #333;
+}
+
+.terminos-link {
+    color: #000000; /* Color negro para el enlace */
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.terminos-link:hover {
+    color: #ffffff; /* Color blanco en hover */
+    background-color: rgba(0, 0, 0, 0.1); /* Fondo sutil para mejor visibilidad */
+    padding: 1px 2px;
+    border-radius: 2px;
+}
+
+/* Nuevo estilo para los mensajes de error */
+.error-terminos{
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    font-size: 10px;
+    padding: 4px 8px;
+    position: absolute;
+    left: -160px;
+    top: 47%;
+    transform: translateY(-50%);
+    width: 150px;
+    z-index: 10;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Flecha para el contenedor de error */
+.error-terminos:after {
+    content: '';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 5px 0 5px 10px;
+    border-style: solid;
+    border-color: transparent transparent transparent #f8d7da;
+}
+
+/* Eliminar viñetas y estilos default de listas de errores */
+.error-terminos ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.error-terminos li {
+    padding: 0;
+    margin: 0;
+}
+
+/* Estilos para el modal de términos y condiciones */
+.modal-terminos {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.modal-content-terminos {
+    background-color: #fefefe;
+    margin: 2% auto;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header-terminos {
+    background-color: var(--color-primario);
+    color: #000;
+    padding: 10px 20px; /* Reducido de 15px a 10px top y bottom */
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header-terminos h2 {
+    margin: 0;
+    font-size: 20px; /* Tamaño de letra reducido */
+    font-weight: bold;
+}
+
+.close-modal {
+    color: #000;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-modal:hover,
+.close-modal:focus {
+    color: #666;
+}
+
+.modal-body-terminos {
+    padding: 10px 20px; /* Reducido de 15px a 10px top y bottom */
+    max-height: calc(90vh - 100px);
+    overflow-y: auto;
+    font-size: 12px; /* Letra más pequeña */
+    line-height: 1.4;
+}
+
+.modal-body-terminos h3 {
+    color: var(--color-secundario);
+    font-size: 14px; /* Tamaño reducido para h3 */
+    margin: 10px 0 5px 0; /* Reducido margen top de 15px a 10px y bottom de 8px a 5px */
+    font-weight: bold;
+}
+
+.modal-body-terminos h4 {
+    color: #333;
+    font-size: 13px; /* Tamaño reducido para h4 */
+    margin: 8px 0 4px 0; /* Reducido margen top de 12px a 8px y bottom de 6px a 4px */
+    font-weight: 600;
+}
+
+.modal-body-terminos p {
+    margin: 4px 0; /* Reducido margen de 6px a 4px top y bottom */
+    text-align: justify;
+}
+
+.modal-body-terminos ul {
+    margin: 4px 0; /* Reducido margen de 6px a 4px top y bottom */
+    padding-left: 20px;
+}
+
+.modal-body-terminos li {
+    margin: 2px 0; /* Reducido margen de 3px a 2px top y bottom */
+}
+
+.modal-body-terminos a {
+    color: #000000; /* Enlaces en negro */
+    text-decoration: underline;
+    transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.modal-body-terminos a:hover {
+    color: #ffffff; /* Color blanco en hover */
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 1px 3px;
+    border-radius: 2px;
+}
+
+.modal-body-terminos strong {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Estilo para el scrollbar del modal */
+.modal-body-terminos::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body-terminos::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.modal-body-terminos::-webkit-scrollbar-thumb {
+    background: var(--color-secundario);
+    border-radius: 4px;
+}
+
+.modal-body-terminos::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primario);
+}
+
+/* Validación del checkbox requerido */
+input[type="checkbox"]:required:not(:checked) + .terminos-text {
+    color: #721c24;
+}
+
+input[type="checkbox"]:required:not(:checked) ~ .error-terminos {
+    display: block;
+}
+
 
 /* Laptops (1024px a 1340px) */
 @media screen and (min-width: 1024px) and (max-width: 1340px) {

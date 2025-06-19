@@ -280,11 +280,6 @@ input[type="password"] {
     transform: rotate(45deg); 
 }
 
-/* Nuevo estilo para los contenedores de inputs y labels */
-.form-group {
-    position: relative;
-}
-
 /* Nuevo estilo para los mensajes de error */
 .error-container {
     color: #721c24;
