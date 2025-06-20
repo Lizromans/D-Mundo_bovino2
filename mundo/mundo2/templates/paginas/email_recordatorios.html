@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ titulo }} - Mundo Bovino</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c7a2c, #4a9d4a);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        
+        .header .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .content {
+            padding: 40px 30px;
+            line-height: 1.6;
+        }
+        
+        .notification-type {
+            background-color: #e8f5e8;
+            border-left: 4px solid #2c7a2c;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .notification-type.urgent {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        
+        .notification-type.warning {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .main-message {
+            font-size: 18px;
+            color: #2c7a2c;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .message-content {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+        }
+        
+        .message-content p {
+            margin: 0 0 15px 0;
+        }
+        
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #2c7a2c, #4a9d4a);
+            color: white !important;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 20px 0;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .action-button:hover {
+            background: linear-gradient(135deg, #1f5f1f, #357a35);
+            transform: translateY(-2px);
+        }
+        
+        .info-grid {
+            display: table;
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        .info-item {
+            display: table-row;
+        }
+        
+        .info-label {
+            display: table-cell;
+            font-weight: 600;
+            color: #2c7a2c;
+            padding: 8px 15px 8px 0;
+            vertical-align: top;
+            min-width: 100px;
+        }
+        
+        .info-value {
+            display: table-cell;
+            padding: 8px 0;
+            vertical-align: top;
+        }
+        
+        .footer {
+            background-color: #2c2c2c;
+            color: #cccccc;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #4a9d4a;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #ddd, transparent);
+            margin: 30px 0;
+        }
+        
+        .emoji {
+            font-size: 24px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .action-button {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <span class="logo">🐄</span>
+            <h1>Mundo Bovino</h1>
+            <p>Sistema de Gestión Ganadera</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <div class="main-message">
+                Hola {{ usuario }},
+            </div>
+            
+            <!-- Notification Type Badge -->
+            <div class="notification-type {% if 'urgente' in titulo.lower or 'hoy' in titulo.lower %}urgent{% elif 'vacunación' in titulo.lower %}warning{% endif %}">
+                <strong>{{ titulo }}</strong>
+            </div>
+            
+            <!-- Message Content -->
+            <div class="message-content">
+                {{ mensaje|safe }}
+            </div>
+            
+            <!-- Action Button -->
+            {% if url_redirect %}
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ site_url }}{{ url_redirect }}" class="action-button">
+                    Ver Detalles <span style="margin-left: 8px;">→</span>
+                </a>
+            </div>
+            {% endif %}
+            
+            <!-- Additional Info -->
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">📅 Fecha:</div>
+                    <div class="info-value">{{ fecha|date:"d/m/Y H:i" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">🔔 Tipo:</div>
+                    <div class="info-value">{{ tipo_notificacion|default:"Recordatorio" }}</div>
+                </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <!-- Help Section -->
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px;">
+                <h3 style="margin-top: 0; color: #2c7a2c;">💡 Consejos:</h3>
+                <ul style="padding-left: 20px; margin-bottom: 0;">
+                    <li>Mantén tu calendario actualizado para recibir recordatorios precisos</li>
+                    <li>Revisa regularmente el estado de tus animales durante los ciclos de vacunación</li>
+                    <li>Puedes desactivar estas notificaciones desde tu panel de configuración</li>
+                    <li>Para emergencias veterinarias, contacta directamente a tu veterinario</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Mundo Bovino</strong> - Tu aliado en la gestión ganadera</p>
+            <p>
+                <a href="{{ site_url }}/notificaciones/">Configurar Notificaciones</a> | 
+                <a href="{{ site_url }}/soporte/">Soporte</a>
+            </p>
+            <div class="divider" style="background: linear-gradient(to right, transparent, #555, transparent); margin: 20px 0;"></div>
+            <p style="font-size: 12px; color: #999;">
+                Este correo fue enviado automáticamente por el sistema de recordatorios de Mundo Bovino.<br>
+                Si no deseas recibir estas notificaciones, puedes 
+                <a href="{{ site_url }}/notificaciones/" style="color: #4a9d4a;">desactivarlas aquí</a>.
+            </p>
+            <p style="font-size: 12px; color: #999;">
+                © {{ year }} Mundo Bovino. Todos los derechos reservados.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

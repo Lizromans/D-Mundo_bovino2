@@ -10,6 +10,17 @@
     <link href="{% static 'css/base3.css' %}" rel="stylesheet">
     {% block css %}{% endblock %}
 </head>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/sw.js')
+        .then(function(registration) {
+            console.log('Service Worker registrado');
+        })
+        .catch(function(error) {
+            console.log('Error al registrar Service Worker:', error);
+        });
+}
+</script>
 <body>
     {% block contenido %}{% endblock %}
     <div class="home"> 

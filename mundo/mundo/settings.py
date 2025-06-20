@@ -153,3 +153,9 @@ WEBPUSH_SETTINGS = {
     "VAPID_PRIVATE_KEY": "jzDamU8qJdwKpRnuUQN9yZpdLwUSXDbGcgu5OPXyoks", 
     "VAPID_ADMIN_EMAIL": "mundobovinoapp@gmail.com",
 }
+
+# Agregar timezone si no lo tienes
+import os
+from django.utils import timezone
+USE_TZ = True
+TIME_ZONE = 'America/Bogota'  # o tu zona horaria

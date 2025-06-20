@@ -1,9 +1,11 @@
 {% extends "Base3.html" %}
 {% load static %}
+{% load webpush_notifications %}
 {% block titulo %} Mundo Bovino {% endblock %}
 {% block css %}
 <link href="{% static 'css/notificaciones.css' %}" rel="stylesheet">
 {% endblock %}
+
 {% block contenido %} {% endblock %}
 
 {% block main %}
@@ -17,37 +19,41 @@
         {% endfor %}
     </div>
 {% endif %}
-    <div class="container">
-        <form method="POST" action="{% url 'notificaciones' %}">
-            {% csrf_token %}
-            
-            <div class="notification-item">
-                <div class="notification-info">
-                    <div class="notification-title">Notificaciones por email</div>
-                    <div class="notification-description">Recibir notificaciones en tu correo</div>
-                </div>
-                <label class="toggle">
-                    <input type="checkbox" name="notif_email" {% if notif_email %}checked{% endif %}>
-                    <span class="slider"></span>
-                </label>
-            </div>
-            
-            <div class="notification-item">
-                <div class="notification-info">
-                    <div class="notification-title">Notificaciones por push</div>
-                    <div class="notification-description">Recibir notificaciones en el navegador</div>
-                </div>
-                <label class="toggle">
-                    <input type="checkbox" name="notif_push" {% if notif_push %}checked{% endif %}>
-                    <span class="slider"></span>
-                </label>
-            </div>
-            
-            <div class="button-container">
-                <button type="submit" class="save-button">Guardar cambios</button>
-            </div>
-        </form>
-    </div>
 
-    <script src="{% static 'js/mensajes.js' %}"></script>
+<div class="container">
+    <form method="POST" action="{% url 'notificaciones' %}">
+        {% csrf_token %}
+        
+        <div class="notification-item">
+            <div class="notification-info">
+                <div class="notification-title">Notificaciones por email</div>
+                <div class="notification-description">Recibir notificaciones en tu correo</div>
+            </div>
+            <label class="toggle">
+                <input type="checkbox" name="notif_email" {% if notif_email %}checked{% endif %}>
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="notification-item">
+            <div class="notification-info">
+                <div class="notification-title">Notificaciones por push</div>
+                <div class="notification-description">Recibir notificaciones en el navegador</div>
+            </div>
+            <label class="toggle">
+                <input type="checkbox" name="notif_push" {% if notif_push %}checked{% endif %} id="push-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="button-container">
+            <button type="submit" class="save-button">Guardar cambios</button>
+        </div>
+    </form>
+</div>
+
+<!-- Service Worker y configuración push -->
+{% webpush_header %}
+<script src="{% static 'js/mensajes.js' %}"></script>
+<script src="{% static 'js/push-notifications.js' %}"></script>
 {% endblock %}

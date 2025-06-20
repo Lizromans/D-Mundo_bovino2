@@ -385,34 +385,11 @@ def notificaciones(request):
     notif_settings = {
         'notif_email': request.session.get('notif_email', False),
         'notif_push': request.session.get('notif_push', False),
-        'notif_modulos': request.session.get('notif_modulos', True),
-        'notif_inventario': request.session.get('notif_inventario', True),
-        'notif_ventas': request.session.get('notif_ventas', True),
-        'notif_calendario': request.session.get('notif_calendario', True),
-        'notif_documentos': request.session.get('notif_documentos', True),
-        'notif_agenda': request.session.get('notif_agenda', True),
     }
     
     if request.method == 'POST':
         notif_settings['notif_email'] = 'notif_email' in request.POST
         notif_settings['notif_push'] = 'notif_push' in request.POST
-        notif_settings['notif_modulos'] = 'notif_modulos' in request.POST
-        
-        if notif_settings['notif_modulos']:
-            notif_settings['notif_inventario'] = 'notif_inventario' in request.POST
-            notif_settings['notif_ventas'] = 'notif_ventas' in request.POST
-            notif_settings['notif_calendario'] = 'notif_calendario' in request.POST
-            notif_settings['notif_documentos'] = 'notif_documentos' in request.POST
-            notif_settings['notif_agenda'] = 'notif_agenda' in request.POST
-        else:
-            notif_settings['notif_inventario'] = False
-            notif_settings['notif_ventas'] = False
-            notif_settings['notif_calendario'] = False
-            notif_settings['notif_documentos'] = False
-            notif_settings['notif_agenda'] = False
-        
-        for key, value in notif_settings.items():
-            request.session[key] = value
         
         messages.success(request, "Preferencias de notificaciones actualizadas correctamente")
         return redirect('notificaciones')
