@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
-from .forms import AdministradorRegistroForm
+from .forms import AdministradorRegistroForm, FormularioSoporte
+from django.core.mail import EmailMessage
 from .models import Administrador, Agenda, Animal, Documento, Compra, DetCom, Venta, DetVen, Contacto
 from django.db import connection
 from functools import wraps
@@ -2754,6 +2755,55 @@ def cancelar_contacto(request):
     else:
         return redirect('contacto')
     
+def formulario_soporte(request):
+    if request.method == 'POST':
+        form = FormularioSoporte(request.POST, request.FILES)
+        if form.is_valid():
+            # Obtener datos del formulario
+            nombre = form.cleaned_data['nombreCompleto']
+            email_remitente = form.cleaned_data['email']
+            asunto = form.cleaned_data['asunto']
+            descripcion = form.cleaned_data['descripcion']
+            urgencia = form.cleaned_data['urgencia']
+            
+            # Construir el mensaje
+            cuerpo_mensaje = f"""
+            Se ha recibido una nueva solicitud de soporte:
+            
+            Nombre: {nombre}
+            Email: {email_remitente}
+            Asunto: {asunto}
+            Urgencia: {urgencia}
+            
+            Descripción:
+            {descripcion}
+            """
+            
+            # Crear email
+            email = EmailMessage(
+                f'Solicitud de Soporte: {asunto}',
+                cuerpo_mensaje,
+                'tu_sitio@ejemplo.com',  # Remitente
+                ['mundobovinoapp@gmail.com'],  # Destinatario 
+                reply_to=[email_remitente]
+            )
+            
+            # Adjuntar archivos
+            files = request.FILES.getlist('adjuntos')
+            if files:
+                # Limitar a 3 archivos
+                for i, adjunto in enumerate(files[:3]):
+                    email.attach(adjunto.name, adjunto.read(), adjunto.content_type)
+            
+            # Enviar correo
+            email.send()
+            messages.success(request, 'Tu solicitud ha sido enviada correctamente.')
+            return render(request, 'paginas/faq.html', {'form': FormularioSoporte()})
+    else:
+        form = FormularioSoporte()
+    
+    return render(request, 'paginas/faq.html', {'form': form})
+
 "vista para cerrar sesión"
 def logout(request):
     # Clear all session data
