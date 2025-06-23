@@ -110,7 +110,6 @@ class Agenda(models.Model):
         managed = False
         db_table = 'agenda'
 
-
 class Animal(models.Model):
     id_ani = models.AutoField(primary_key=True)  # ID global (sistema)
     cod_ani = models.IntegerField()  # ID específico por usuario
@@ -130,20 +129,23 @@ class Animal(models.Model):
         db_table = 'animal'
         unique_together = ('cod_ani', 'id_adm')  # Asegura unicidad por usuario
 
-
 class Compra(models.Model):
-    cod_com = models.IntegerField(primary_key=True)
+    id_com = models.AutoField(primary_key=True, db_column='id_com')  # Clave primaria auto-incremental
+    cod_com = models.IntegerField()  # Código de compra por administrador
     nom_prov = models.CharField(max_length=255)
     cantidad = models.IntegerField()
     fecha = models.DateField()
     precio_total = models.FloatField()
     id_adm = models.ForeignKey(Administrador, models.DO_NOTHING, db_column='id_adm')
     
-
     class Meta:
         managed = False
         db_table = 'compra'
-
+        # Garantizar que cod_com sea único por administrador
+        unique_together = [['cod_com', 'id_adm']]
+    
+    def __str__(self):
+        return f"Compra {self.cod_com} - {self.nom_prov}"
 
 class Contacto(models.Model):
     id_cont = models.AutoField(primary_key=True)
@@ -156,7 +158,6 @@ class Contacto(models.Model):
     class Meta:
         managed = False
         db_table = 'contacto'
-
 
 class DetCom(models.Model):
     cod_detcom = models.IntegerField(primary_key=True)
@@ -193,7 +194,6 @@ class DetVen(models.Model):
         managed = False
         db_table = 'det_ven'
 
-
 class Documento(models.Model):
     num_doc = models.AutoField(primary_key=True)
     archivo = models.FileField(upload_to='documentos/', null=True)
@@ -211,16 +211,15 @@ class Documento(models.Model):
             return self.archivo.name.lower().endswith('.pdf')
         return False
 
-
 class Venta(models.Model):
-    cod_ven = models.IntegerField(primary_key=True)
+    id_ven = models.AutoField(primary_key=True, db_column='id_ven')  # Clave primaria auto-incremental
+    cod_ven = models.IntegerField()
     nom_cli = models.CharField(max_length=255)
     cantidad = models.IntegerField()
     fecha = models.DateField()
     precio_total = models.FloatField()
     id_adm = models.ForeignKey(Administrador, models.DO_NOTHING, db_column='id_adm')
     
-
     class Meta:
         managed = False
         db_table = 'venta'

@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from .forms import AdministradorRegistroForm, FormularioSoporte
 from django.core.mail import EmailMessage
 from .models import Administrador, Agenda, Animal, Documento, Compra, DetCom, Venta, DetVen, Contacto
-from django.db import connection
+from django.db import connection, models
 from functools import wraps
 from datetime import date, datetime, timedelta, time
 from decimal import Decimal, InvalidOperation
@@ -1313,6 +1313,7 @@ def compras(request):
         return redirect('home')
     
 @login_required
+@transaction.atomic
 def crear_compra(request):
     """Vista para crear una nueva compra con sus detalles."""
     if request.method == 'POST':
@@ -1334,27 +1335,64 @@ def crear_compra(request):
             # Convertimos a float
             precio_total = float(precio_total_str)
             
+            # Determinar el siguiente id_com global
+            siguiente_id_com = 1
+            ultima_compra_global = Compra.objects.order_by('-id_com').first()
+            if ultima_compra_global:
+                siguiente_id_com = ultima_compra_global.id_com + 1
+            
             # Determinar el siguiente código de compra para este administrador
+            # Usar select_for_update para evitar condiciones de carrera
             siguiente_cod_com = 1
-            ultima_compra = Compra.objects.filter(id_adm=usuario_id).order_by('-cod_com').first()
+            ultima_compra = Compra.objects.filter(
+                id_adm=usuario_id
+            ).select_for_update().order_by('-cod_com').first()
+            
             if ultima_compra:
                 siguiente_cod_com = ultima_compra.cod_com + 1
             
-            # Crear la compra
-            compra = Compra.objects.create(
-                cod_com=siguiente_cod_com,
-                id_adm_id=usuario_id,
-                fecha=fecha,
-                nom_prov=nom_prov,
-                cantidad=cantidad,
-                precio_total=precio_total
-            )
+            # Crear la compra con validación adicional
+            try:
+                compra = Compra.objects.create(
+                    id_com=siguiente_id_com,  # ID global único
+                    cod_com=siguiente_cod_com,  # Código por administrador
+                    id_adm_id=usuario_id,
+                    fecha=fecha,
+                    nom_prov=nom_prov,
+                    cantidad=cantidad,
+                    precio_total=precio_total
+                )
+            except Exception as create_error:
+                # Si hay error en la creación, manejar específicamente el error de clave duplicada
+                if "Duplicate entry" in str(create_error):
+                    # Intentar con el siguiente número disponible
+                    max_cod_com = Compra.objects.filter(
+                        id_adm=usuario_id
+                    ).aggregate(max_cod=models.Max('cod_com'))['max_cod'] or 0
+                    
+                    siguiente_cod_com = max_cod_com + 1
+                    
+                    compra = Compra.objects.create(
+                        cod_com=siguiente_cod_com,
+                        id_adm_id=usuario_id,
+                        fecha=fecha,
+                        nom_prov=nom_prov,
+                        cantidad=cantidad,
+                        precio_total=precio_total
+                    )
+                else:
+                    raise create_error
             
             # Procesar detalles de animales
+            detalles_creados = 0
             for i in range(1, cantidad + 1):
                 # Obtener valores con validación
-                cod_ani = request.POST.get(f'cod_ani_{i}', '')
-                edad_aniCom = request.POST.get(f'edad_aniCom_{i}', '0')
+                cod_ani = request.POST.get(f'cod_ani_{i}', '').strip()
+                edad_aniCom = request.POST.get(f'edad_aniCom_{i}', '').strip()
+                
+                # Validar edad_aniCom como texto (puede ser "1-2", "adulto", etc.)
+                if not edad_aniCom:
+                    edad_aniCom = "No especificada"
                 
                 # FORMA CORRECTA de manejar Decimal con soporte para formato con coma
                 peso_str = request.POST.get(f'peso_aniCom_{i}', '0,00')
@@ -1367,41 +1405,57 @@ def crear_compra(request):
                         
                         # Validar que el peso sea positivo
                         if peso_aniCom <= 0:
-                            messages.error(request, f"Error: El peso del animal {i} debe ser mayor que cero.")
-                            continue
+                            messages.warning(request, f"Advertencia: El peso del animal {i} debe ser mayor que cero. Se usará 0 como valor por defecto.")
+                            peso_aniCom = Decimal('0')
                             
                     except (ValueError, InvalidOperation):
-                        messages.error(request, f"Error: El peso del animal {i} debe ser un número válido (ej: 15,05 o 15.05).")
-                        continue
+                        messages.warning(request, f"Advertencia: El peso del animal {i} no es válido. Se usará 0 como valor por defecto.")
+                        peso_aniCom = Decimal('0')
                 
                 # Asegurar que los campos no sean None o cadenas vacías
                 if not cod_ani:
-                    messages.error(request, f"Código de animal es requerido para el animal {i}")
+                    messages.warning(request, f"Advertencia: Código de animal faltante para el animal {i}. Se omite este detalle.")
                     continue
                 
                 # Formatear correctamente el precio unitario
                 precio_uni_str = request.POST.get(f'precio_uni_{i}', '0')
                 precio_uni_str = precio_uni_str.replace('.', '')  # Eliminar puntos de miles
                 precio_uni_str = precio_uni_str.replace(',', '.')  # Reemplazar coma decimal por punto
-                precio_uni = float(precio_uni_str)
                 
-                # Crear el detalle de venta con valores por defecto si están vacíos
-                DetCom.objects.create(
-                    cod_com=compra,
-                    cod_ani=cod_ani,
-                    edad_aniCom=edad_aniCom or 0,  # Valor por defecto 0 si está vacío
-                    peso_aniCom=peso_aniCom or 0,  # Puede ser None o un Decimal
-                    precio_uni=precio_uni,
-                )
+                try:
+                    precio_uni = float(precio_uni_str)
+                except ValueError:
+                    messages.warning(request, f"Advertencia: Precio unitario inválido para el animal {i}. Se usará 0.")
+                    precio_uni = 0.0
+                
+                # Crear el detalle de compra con valores por defecto si están vacíos
+                try:
+                    DetCom.objects.create(
+                        cod_com=compra,
+                        cod_ani=cod_ani,
+                        edad_aniCom=edad_aniCom,  # Ya es string
+                        peso_aniCom=peso_aniCom or Decimal('0'),
+                        precio_uni=precio_uni,
+                    )
+                    detalles_creados += 1
+                except Exception as detalle_error:
+                    messages.warning(request, f"Error al crear detalle para animal {i}: {str(detalle_error)}")
+                    continue
             
-            messages.success(request, "Compra registrada exitosamente")
+            # Mensaje de éxito con información adicional
+            if detalles_creados > 0:
+                messages.success(request, f"Compra #{siguiente_cod_com} registrada exitosamente con {detalles_creados} detalles de animales.")
+            else:
+                messages.warning(request, f"Compra #{siguiente_cod_com} registrada, pero no se pudieron crear los detalles de animales.")
+            
             return redirect('compras')
+            
         except Exception as e:
             messages.error(request, f"Error al registrar la compra: {str(e)}")
             return redirect('compras')
     else:
         return redirect('compras')
-       
+           
 @login_required
 def editar_compra(request, cod_com):
     """
