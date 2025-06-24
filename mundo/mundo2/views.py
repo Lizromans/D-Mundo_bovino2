@@ -381,28 +381,6 @@ def configuraciones(request):
         return redirect('home')
 
 @login_required
-def notificaciones(request):
-    notif_settings = {
-        'notif_email': request.session.get('notif_email', False),
-        'notif_push': request.session.get('notif_push', False),
-    }
-    
-    if request.method == 'POST':
-        notif_settings['notif_email'] = 'notif_email' in request.POST
-        notif_settings['notif_push'] = 'notif_push' in request.POST
-        
-        messages.success(request, "Preferencias de notificaciones actualizadas correctamente")
-        return redirect('notificaciones')
-    
-    context = {
-        'current_page': 'notificaciones',
-        'current_page_name': 'Notificaciones',
-        **notif_settings
-    }
-    
-    return render(request, 'paginas/notificaciones.html', context)
-
-@login_required
 def privacidad(request):
     usuario_id = request.session.get('usuario_id')
     

@@ -16,7 +16,6 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('logout/', views.logout, name='logout'),
     path('configuraciones/', views.configuraciones, name='configuraciones'),
-    path('notificaciones/', views.notificaciones, name='notificaciones'),
     path('privacidad/', views.privacidad, name='privacidad'),
     path('inventario/', views.inventario, name='inventario'),    
     path('registrar_animal/', views.registrar_animal, name='registrar_animal'),
@@ -54,7 +53,6 @@ urlpatterns = [
     path('eliminar-contacto/<int:id_cont>/', views.eliminar_contacto, name='eliminar_contacto'),
     path('cancelar_contacto/', views.cancelar_contacto, name='cancelar_contacto'),
     path('formulario_soporte/', views.formulario_soporte, name='formulario_soporte'),
-     path('webpush/', include('webpush.urls')),
     ]
 
 if settings.DEBUG:

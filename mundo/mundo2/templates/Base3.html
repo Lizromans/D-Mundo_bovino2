@@ -54,7 +54,6 @@ if ('serviceWorker' in navigator) {
             </button>
             <div class="menu">
                 <a href="{% url 'configuraciones' %}" class="menu-button {% if current_page == 'configuraciones' %}active{% endif %}">Perfil</a>
-                <a href="{% url 'notificaciones' %}" class="menu-button {% if current_page == 'notificaciones' %}active{% endif %}">Notificaciones</a>
                 <a href="{% url 'privacidad' %}" class="menu-button {% if current_page == 'privacidad' %}active{% endif %}">Privacidad</a>
             </div>
             {% block main %} {% endblock %}
