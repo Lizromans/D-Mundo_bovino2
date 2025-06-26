@@ -144,6 +144,22 @@
                                                     <input type="text" id="nom_prov-edit-{{ compra.cod_com }}" name="nom_prov" class="form-control" value="{{ compra.nom_prov }}" required>
                                                 </div>
                                             </div>
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="valor_licencia-edit-{{ compra.cod_com }}">Valor Licencia (Opcional):</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">$</span>
+                                                        <input type="text" id="valor_licencia-edit-{{ compra.cod_com }}" name="valor_licencia" class="form-control" value="{% if compra.valor_licenciaCom %}{{ compra.valor_licenciaCom|floatformat:0 }}{% endif %}" placeholder="0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="valor_transporte-edit-{{ compra.cod_com }}">Valor Transporte (Opcional):</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">$</span>
+                                                        <input type="text" id="valor_transporte-edit-{{ compra.cod_com }}" name="valor_transporte" class="form-control" value="{% if compra.valor_transporteCom %}{{ compra.valor_transporteCom|floatformat:0 }}{% endif %}" placeholder="0">
+                                                    </div>
+                                                </div>
+                                            </div>
                                             
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
@@ -239,6 +255,14 @@
                                                         <td>{{ compra.nom_prov }}</td>
                                                     </tr>
                                                     <tr>
+                                                        <th>Valor Licencia:</th>
+                                                        <td>${{ compra.valor_licenciaCom|default_if_none:0|floatformat:0|intcomma }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Valor Transporte:</th>
+                                                        <td>${{ compra.valor_transporteCom|default_if_none:0|floatformat:0|intcomma }}</td>
+                                                    </tr>
+                                                    <tr>
                                                         <th>Cantidad de Animales:</th>
                                                         <td>{{ compra.cantidad }}</td>
                                                     </tr>
@@ -311,29 +335,42 @@
                         {% csrf_token %}
                         
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="fecha">Fecha de Compra:</label>
                                 <input type="date" id="fecha" name="fecha" class="form-control" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="nom_prov">Proveedor:</label>
                                 <input type="text" id="nom_prov" name="nom_prov" class="form-control" required>
                             </div>
+                            <div class="col-md-4">
+                                <label for="valor_licencia">Valor Licencia (Opcional):</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="text" id="valor_licencia" name="valor_licencia" class="form-control" placeholder="0">
+                                </div>
+                            </div>
                         </div>
-                        
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label for="valor_transporte">Valor Transporte (Opcional):</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="text" id="valor_transporte" name="valor_transporte" class="form-control" placeholder="0">
+                                </div>
+                            </div>
+                        
+                            <div class="col-md-3">
                                 <label for="cantidad">Cantidad de Animales:</label>
                                 <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <label for="precio_total">Precio Total:</label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
                                     <input type="text" id="precio_total" name="precio_total" class="form-control" readonly>
                                 </div>
                                 <small class="form-text text-muted">El precio total se calculará automáticamente.</small>
-
                             </div>
                         </div>
                         

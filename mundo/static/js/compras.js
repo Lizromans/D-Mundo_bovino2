@@ -185,32 +185,50 @@ function validarPesoEdicion(input) {
     return validarYFormatearPeso(input);
 }
 
-// Función para calcular el precio total basado en los precios unitarios
+// Función para obtener valor numérico de un input formateado
+function obtenerValorNumerico(input) {
+    if (!input || !input.value) return 0;
+    const valorTexto = input.value.replace(/[^\d]/g, '');
+    return parseFloat(valorTexto) || 0;
+}
+
+// Función para calcular el precio total basado en los precios unitarios, transporte y licencia
 function calcularPrecioTotal() {
     const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
-    let total = 0;
+    let totalAnimales = 0;
 
     console.log(`Calculando precio total para ${cantidad} animales`);
 
+    // Sumar precios de los animales
     for (let i = 1; i <= cantidad; i++) {
         const precioInput = document.getElementById(`precio_uni_${i}`);
 
         if (precioInput) {
-            // Eliminar formato para obtener el valor numérico
-            const precioTexto = precioInput.value.replace(/[^\d]/g, '');
-            const precio = parseFloat(precioTexto) || 0;
-            total += precio;
-            console.log(`Animal #${i}: Precio = ${precio}, Total acumulado = ${total}`);
+            const precio = obtenerValorNumerico(precioInput);
+            totalAnimales += precio;
+            console.log(`Animal #${i}: Precio = ${precio}, Total acumulado animales = ${totalAnimales}`);
         } else {
             console.warn(`No se encontró el campo de precio para el animal #${i}`);
         }
     }
 
+    // Obtener valores de transporte y licencia
+    const transporteInput = document.getElementById('transporte');
+    const licenciaInput = document.getElementById('licencia');
+    
+    const valorTransporte = obtenerValorNumerico(transporteInput);
+    const valorLicencia = obtenerValorNumerico(licenciaInput);
+    
+    console.log(`Transporte: ${valorTransporte}, Licencia: ${valorLicencia}`);
+
+    // Calcular total final
+    const totalFinal = totalAnimales + valorTransporte + valorLicencia;
+
     // Actualizar el campo de precio total con formato
     const precioTotalInput = document.getElementById('precio_total');
     if (precioTotalInput) {
-        precioTotalInput.value = total.toLocaleString('es-CO');
-        console.log(`Precio total actualizado: ${precioTotalInput.value}`);
+        precioTotalInput.value = totalFinal.toLocaleString('es-CO');
+        console.log(`Precio total actualizado: ${precioTotalInput.value} (Animales: ${totalAnimales}, Transporte: ${valorTransporte}, Licencia: ${valorLicencia})`);
     } else {
         console.warn('No se encontró el campo de precio total');
     }
@@ -224,20 +242,30 @@ function recalcularPrecioTotal(compraId) {
         return;
     }
 
-    let total = 0;
+    let totalAnimales = 0;
     
-    // Sumar todos los precios unitarios
+    // Sumar todos los precios unitarios de los animales
     modal.querySelectorAll('.precio-uni-edit').forEach(input => {
-        // Eliminar formato para obtener el valor numérico
-        const precioTexto = input.value.replace(/[^\d]/g, '');
-        const precio = parseFloat(precioTexto) || 0;
-        total += precio;
+        const precio = obtenerValorNumerico(input);
+        totalAnimales += precio;
     });
+    
+    // Obtener valores de transporte y licencia del modal de edición
+    const transporteInput = document.getElementById('transporte-edit-' + compraId);
+    const licenciaInput = document.getElementById('licencia-edit-' + compraId);
+    
+    const valorTransporte = obtenerValorNumerico(transporteInput);
+    const valorLicencia = obtenerValorNumerico(licenciaInput);
+    
+    console.log(`Edición compra ${compraId} - Animales: ${totalAnimales}, Transporte: ${valorTransporte}, Licencia: ${valorLicencia}`);
+    
+    // Calcular total final
+    const totalFinal = totalAnimales + valorTransporte + valorLicencia;
     
     // Actualizar el precio total
     const precioTotalInput = document.getElementById('precio_total-edit-' + compraId);
     if (precioTotalInput) {
-        precioTotalInput.value = total.toLocaleString('es-CO');
+        precioTotalInput.value = totalFinal.toLocaleString('es-CO');
         console.log(`Precio total actualizado para compra ${compraId}: ${precioTotalInput.value}`);
     } else {
         console.error(`No se encontró el campo precio_total-edit-${compraId}`);
@@ -264,8 +292,24 @@ function verificarEstructuraHTML() {
         console.log(`Contenedor de detalles encontrado, contiene ${contenedor.children.length} elementos`);
     }
 
+    // Verificar campos de transporte y licencia
+    const transporteInput = document.getElementById('transporte');
+    const licenciaInput = document.getElementById('licencia');
+    
+    if (!transporteInput) {
+        console.warn('No se encontró el campo de transporte (ID: transporte)');
+    } else {
+        console.log(`Campo de transporte encontrado, valor: ${transporteInput.value}`);
+    }
+    
+    if (!licenciaInput) {
+        console.warn('No se encontró el campo de licencia (ID: licencia)');
+    } else {
+        console.log(`Campo de licencia encontrado, valor: ${licenciaInput.value}`);
+    }
+
     // Verificar si hay múltiples elementos con IDs duplicados
-    ['cantidad', 'detalles_animales', 'precio_total'].forEach(id => {
+    ['cantidad', 'detalles_animales', 'precio_total', 'transporte', 'licencia'].forEach(id => {
         const elementos = document.querySelectorAll(`#${id}`);
         if (elementos.length > 1) {
             console.error(`¡ALERTA! Se encontraron ${elementos.length} elementos con el ID "${id}"`);
@@ -323,6 +367,24 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('No se encontró el campo de cantidad');
     }
 
+    // Configurar event listeners para los campos de transporte y licencia
+    const transporteInput = document.getElementById('transporte');
+    const licenciaInput = document.getElementById('licencia');
+
+    if (transporteInput) {
+        transporteInput.addEventListener('change', function() {
+            formatearPrecioCOP(this);
+            calcularPrecioTotal();
+        });
+    }
+
+    if (licenciaInput) {
+        licenciaInput.addEventListener('change', function() {
+            formatearPrecioCOP(this);
+            calcularPrecioTotal();
+        });
+    }
+
     // --- FUNCIONALIDAD PARA EDITAR COMPRAS ---
     
     // Escuchar cambios en los precios unitarios para recalcular el precio total en formularios de edición
@@ -336,6 +398,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 recalcularPrecioTotal(compraId);
             } else {
                 console.error('No se encontró data-compra en el input:', this);
+            }
+        });
+    });
+
+    // Escuchar cambios en transporte y licencia de modales de edición
+    document.querySelectorAll('[id^="transporte-edit-"], [id^="licencia-edit-"]').forEach(input => {
+        input.addEventListener('change', function() {
+            formatearPrecioCOP(this);
+            
+            // Extraer el ID de la compra del ID del input
+            const compraId = this.id.match(/-(\d+)$/)?.[1];
+            if (compraId) {
+                recalcularPrecioTotal(compraId);
+            } else {
+                console.error('No se pudo extraer el ID de compra del input:', this);
             }
         });
     });

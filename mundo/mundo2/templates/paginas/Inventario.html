@@ -150,7 +150,7 @@
                                             <!-- Columna izquierda -->
                                             <div class="detalle-izquierda">
                                                 <p><b>Edad:</b> {{ animal.edad }} años</p>
-                                                <p><b>Peso:</b> {{ animal.peso }} kg</p>
+                                                <p><b>Peso:</b> {{ animal.peso_formateado }} kg</p>
                                             </div>
                                             <!-- Columna derecha -->
                                             <div class="detalle-derecha">
@@ -167,25 +167,6 @@
                                         <button type="button" class="btn-eliminar" onclick="document.getElementById('confirmDeleteModal-{{ animal.cod_ani }}').style.display='flex'">
                                             <img src="{% static 'img/eliminar.png' %}" alt="eliminar" width="20">
                                         </button>
-
-                                        <!-- Modal de confirmación de venta -->
-                                        <div id="confirmSaleModal-{{ animal.cod_ani }}" class="custom-modal">
-                                            <div class="custom-modal-content">
-                                                <div class="custom-modal-header">
-                                                    <h3>Confirmar venta</h3>
-                                                </div>
-                                                <div class="custom-modal-body">
-                                                    <p>¿Estás seguro de marcar este animal como vendido (ID: {{ animal.cod_ani }})?</p>
-                                                </div>
-                                                <div class="custom-modal-footer">
-                                                    <button type="button" class="btn-cancelar" onclick="document.getElementById('confirmSaleModal-{{ animal.cod_ani }}').style.display='none'">Cancelar</button>
-                                                    <form action="{% url 'marcar_vendido' animal.cod_ani %}" method="POST" style="display: inline;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn-confirmar">Marcar como vendido</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
 
                                         <!-- Modal de confirmación de eliminación -->
                                         <div id="confirmDeleteModal-{{ animal.cod_ani }}" class="custom-modal">
@@ -231,9 +212,11 @@
                                                                 <label for="edad_edit" class="form-label">Edad:</label>
                                                                 <select class="form-select" id="edad_edit" name="edad" required>
                                                                     <option value="" disabled>Selecciona una edad</option>
+                                                                    <option value="1-2" {% if animal.edad == "1-2" %}selected{% endif %}>0 - 1 año</option>
                                                                     <option value="1-2" {% if animal.edad == "1-2" %}selected{% endif %}>1 - 2 año</option>
                                                                     <option value="2-3" {% if animal.edad == "2-3" %}selected{% endif %}>2 - 3 años</option> 
-                                                                    <option value="3-4" {% if animal.edad == "3-4" %}selected{% endif %}>3 - 4 años</option>                                                   
+                                                                    <option value="3-4" {% if animal.edad == "3-4" %}selected{% endif %}>3 - 4 años</option>  
+                                                                    <option value="3-4" {% if animal.edad == "3-4" %}selected{% endif %}>4 - más</option>                                                     
                                                                 </select>
                                                             </div>
                                                             <div class="mb-3">
@@ -290,7 +273,7 @@
                                         <!-- ID y Fecha debajo de la imagen -->
                                         <div class="info-principal">
                                             <p><b>ID Animal:</b> {{ animal.cod_ani }}</p>
-                                            <p><b>Fecha de Ingreso:</b> {{ animal.fecha|date:"d/m/Y" }}</p>
+                                            <p><b>Fecha de Venta:</b> {{ venta.fecha|date:"d/m/Y" }}</p>
                                         </div>
                                         
                                         <!-- Información adicional en dos columnas -->
@@ -387,9 +370,11 @@
                             <label for="edad" class="form-label">Edad:</label>
                             <select class="form-select" id="edad" name="edad" required>
                                 <option value="" disabled selected>Selecciona una edad</option>
+                                <option value="1-2">0 - 1 años</option>
                                 <option value="1-2">1 - 2 años</option>
                                 <option value="2-3">2 - 3 años</option>
                                 <option value="3-4">3 - 4 años</option>
+                                <option value="1-2">4 años - más</option>
                             </select>
                         </div>
                         <div class="mb-3">

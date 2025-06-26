@@ -25,6 +25,7 @@ from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 
 # Create your views here.
@@ -423,6 +424,16 @@ def privacidad(request):
     })
 
 "Vistas para crud de animales"
+def formatear_peso_animales(queryset):
+    """Función helper para formatear el peso de los animales"""
+    for animal in queryset:
+        if animal.peso:
+            animal.peso_formateado = f"{animal.peso:.2f}".replace('.', ',')
+        else:
+            animal.peso_formateado = "0,00"
+    return queryset
+
+
 @login_required
 def inventario(request):
     # Obtener el ID del administrador actual desde la sesión
@@ -441,9 +452,6 @@ def inventario(request):
     
     # Aplicar filtros de búsqueda si existe un término
     if busqueda:
-        from django.db.models import Q
-        import re
-        
         # 1. Verificar si la búsqueda es un código de animal (formato numérico)
         if re.match(r'^\d+$', busqueda) and len(busqueda) <= 5:  # Asumiendo que códigos son números menores a 99999
             # Búsqueda exacta por código de animal
@@ -487,18 +495,13 @@ def inventario(request):
     elif tipo_filtro == 'Edad' and valor_filtro:
         animales = animales.filter(edad=valor_filtro)
     
-    # FORMATEAR EL PESO DE CADA ANIMAL
-    for animal in animales:
-        if animal.peso:
-            # Formato con 2 decimal: 000,00
-            animal.peso_formateado = f"{animal.peso:.2f}".replace('.', ',')
-
-        else:
-            animal.peso_formateado = "0,00"
-    
-    # Separar animales por estado
+    # Separar animales por estado PRIMERO
     animales_disponibles = animales.exclude(estado='Vendido')
     animales_vendidos = animales.filter(estado='Vendido')
+    
+    # FORMATEAR EL PESO DESPUÉS de separar los QuerySets
+    animales_disponibles = formatear_peso_animales(animales_disponibles)
+    animales_vendidos = formatear_peso_animales(animales_vendidos)
 
     # Determinar el siguiente código de animal para este administrador
     proximo_codigo = 1
@@ -584,63 +587,16 @@ def registrar_animal(request):
     
     return redirect('inventario')
 
-def marcar_vendido(request, cod_ani):
-    if request.method == 'POST':
-        try:
-            animal = Animal.objects.get(cod_ani=cod_ani)
-            animal.estado = 'Vendido'
-            animal.save()
-            messages.success(request, f'Animal {cod_ani} marcado como vendido exitosamente.')
-        except Animal.DoesNotExist:
-            messages.error(request, 'Animal no encontrado.')
-    return redirect('inventario')
-
-def restaurar_animal(request, cod_ani):
-    if request.method == 'POST':
-        try:
-            animal = Animal.objects.get(cod_ani=cod_ani)
-            animal.estado = 'Saludable'  # O el estado que prefieras por defecto
-            animal.save()
-            messages.success(request, f'Animal {cod_ani} cambiado a disponible.')
-        except Animal.DoesNotExist:
-            messages.error(request, 'Animal no encontrado.')
-    return redirect('inventario')
-
 @login_required
-def eliminar_animal(request, animal_id):
+def editar_animal(request, cod_ani):
+    """Vista para editar un animal existente"""
     if request.method == "POST":
-        # Obtener el ID del administrador actual desde la sesión
         usuario_id = request.session.get('usuario_id')
         
         try:
-            # Obtener el animal asegurándose que pertenezca al administrador actual
-            animal = get_object_or_404(Animal, cod_ani=animal_id, id_adm=usuario_id)
+            # Obtener el animal a editar
+            animal = Animal.objects.get(cod_ani=cod_ani, id_adm=usuario_id)
             
-            # Eliminar el animal
-            animal.delete()
-            
-            messages.success(request, f"Animal eliminado con éxito!")
-            
-        except Animal.DoesNotExist:
-            messages.error(request, "Error: No se encontró el animal.")
-        except Exception as e:
-            messages.error(request, f"Error al eliminar el animal: {str(e)}")
-        
-        return redirect('inventario')
-    
-    # Si no es un POST, redirigir al inventario
-    return redirect('inventario')
-
-@login_required
-def editar_animal(request, animal_id):
-    # Obtener el ID del administrador actual desde la sesión
-    usuario_id = request.session.get('usuario_id')
-    
-    # Obtener el animal asegurándose que pertenezca al administrador actual
-    animal = get_object_or_404(Animal, cod_ani=animal_id, id_adm=usuario_id)
-    
-    if request.method == "POST":
-        try:
             # Obtener datos del formulario
             fecha_str = request.POST.get("fecha")
             fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
@@ -651,24 +607,16 @@ def editar_animal(request, animal_id):
             peso = None
             if peso_str and peso_str.strip():
                 try:
-                    # Permitir entrada con coma como separador decimal
                     peso_normalizado = peso_str.replace(',', '.')
                     peso = Decimal(peso_normalizado)
                     
-                    # Validar que el peso sea positivo
                     if peso <= 0:
                         messages.error(request, "Error: El peso debe ser mayor que cero.")
-                        return render(request, "paginas/Inventario.html", {
-                            "animal": animal,
-                            "current_page_name": "Inventario"
-                        })
+                        return redirect('inventario')
                         
                 except (ValueError, InvalidOperation):
-                    messages.error(request, "Error: El peso debe ser un número válido (ej: 155,05 o 155.05).")
-                    return render(request, "paginas/Inventario.html", {
-                        "animal": animal,
-                        "current_page_name": "Inventario"
-                    })
+                    messages.error(request, "Error: El peso debe ser un número válido (ej: 15,05 o 15.05).")
+                    return redirect('inventario')
             
             raza = request.POST.get("raza")
             estado = request.POST.get("estado")
@@ -681,36 +629,67 @@ def editar_animal(request, animal_id):
             animal.estado = estado
             animal.save()
             
-            messages.success(request, f"¡Animal actualizado con éxito!")
-            return redirect('inventario')
+            messages.success(request, f"¡Animal {cod_ani} actualizado con éxito!")
             
+        except Animal.DoesNotExist:
+            messages.error(request, "Error: No se pudo encontrar el animal.")
         except Exception as e:
             messages.error(request, f"Error al actualizar el animal: {str(e)}")
+        
+        return redirect('inventario')
     
-    # Para GET request, formatear el peso para mostrar en el formulario
-    if animal.peso:
-        animal.peso_formateado = f"{animal.peso:.2f}".replace('.', ',')
-    else:
-        animal.peso_formateado = "0,00"
+    return redirect('inventario')
 
+@login_required
+def eliminar_animal(request, cod_ani):
+    """Vista para eliminar un animal"""
+    if request.method == "POST":
+        usuario_id = request.session.get('usuario_id')
+        
+        try:
+            animal = Animal.objects.get(cod_ani=cod_ani, id_adm=usuario_id)
+            animal.delete()
+            messages.success(request, f"Animal {cod_ani} eliminado con éxito.")
+            
+        except Animal.DoesNotExist:
+            messages.error(request, "Error: No se pudo encontrar el animal.")
+        except Exception as e:
+            messages.error(request, f"Error al eliminar el animal: {str(e)}")
+        
+        return redirect('inventario')
     
-    return render(request, "paginas/Inventario.html", {
-        "animal": animal,
-        "current_page_name": "Inventario",
-        'recordatorios': request.recordatorios,
-        'hay_recordatorios': request.hay_recordatorios,
-        'total_recordatorios': request.total_recordatorios
-    })
+    return redirect('inventario')
+
+@login_required
+def restaurar_animal(request, cod_ani):
+    """Vista para cambiar el estado de un animal vendido a saludable"""
+    if request.method == "POST":
+        usuario_id = request.session.get('usuario_id')
+        
+        try:
+            animal = Animal.objects.get(cod_ani=cod_ani, id_adm=usuario_id)
+            animal.estado = "Saludable"
+            animal.save()
+            messages.success(request, f"Estado del animal {cod_ani} cambiado a 'Saludable'.")
+            
+        except Animal.DoesNotExist:
+            messages.error(request, "Error: No se pudo encontrar el animal.")
+        except Exception as e:
+            messages.error(request, f"Error al cambiar el estado del animal: {str(e)}")
+        
+        return redirect('inventario')
+    
+    return redirect('inventario')
 
 @login_required
 def cancelar_animal(request):
-    
-    if request.method == 'POST':
-        messages.info(request, "Registro de animal cancelado")
-        return redirect('inventario')
-    else:
+    """Vista para manejar la cancelación del formulario de registro"""
+    if request.method == "POST":
+        # Simplemente redirigir al inventario
         return redirect('inventario')
     
+    return redirect('inventario')
+
 "Vistas para crud de agenda"
 @login_required
 def calendario(request):
@@ -1289,38 +1268,56 @@ def compras(request):
     except Exception as e:
         messages.error(request, f"Error al cargar las compras: {str(e)}")
         return redirect('home')
-    
+
 @login_required
 @transaction.atomic
 def crear_compra(request):
     """Vista para crear una nueva compra con sus detalles."""
     if request.method == 'POST':
         try:
-            # Obtener el ID del administrador actual desde la sesión
             usuario_id = request.session.get('usuario_id')
             
-            # Obtener datos del formulario
             fecha = request.POST.get('fecha')
             nom_prov = request.POST.get('nom_prov')
             cantidad = int(request.POST.get('cantidad'))
 
-            # Formatear correctamente el precio total
+            # Precio total
             precio_total_str = request.POST.get('precio_total', '0')
-            # Primero eliminamos todos los puntos (separadores de miles)
-            precio_total_str = precio_total_str.replace('.', '')
-            # Luego reemplazamos la coma decimal por punto (si existe)
-            precio_total_str = precio_total_str.replace(',', '.')
-            # Convertimos a float
+            precio_total_str = precio_total_str.replace('.', '').replace(',', '.')
             precio_total = float(precio_total_str)
             
-            # Determinar el siguiente id_com global
+            # VALOR LICENCIA - SIEMPRE asignar 0.0 si está vacío
+            valor_licencia_str = request.POST.get('valor_licencia', '').strip()
+            valor_licencia = 0.0  # Valor por defecto
+            
+            if valor_licencia_str:  # Si hay algo en el campo
+                valor_licencia_str = valor_licencia_str.replace('.', '').replace(',', '.')
+                try:
+                    valor_licencia = float(valor_licencia_str)
+                    if valor_licencia < 0:
+                        valor_licencia = 0.0
+                except ValueError:
+                    valor_licencia = 0.0
+            
+            # VALOR TRANSPORTE - SIEMPRE asignar 0.0 si está vacío
+            valor_transporte_str = request.POST.get('valor_transporte', '').strip()
+            valor_transporte = 0.0  # Valor por defecto
+            
+            if valor_transporte_str:  # Si hay algo en el campo
+                valor_transporte_str = valor_transporte_str.replace('.', '').replace(',', '.')
+                try:
+                    valor_transporte = float(valor_transporte_str)
+                    if valor_transporte < 0:
+                        valor_transporte = 0.0
+                except ValueError:
+                    valor_transporte = 0.0
+            
+            # Determinar códigos
             siguiente_id_com = 1
             ultima_compra_global = Compra.objects.order_by('-id_com').first()
             if ultima_compra_global:
                 siguiente_id_com = ultima_compra_global.id_com + 1
             
-            # Determinar el siguiente código de compra para este administrador
-            # Usar select_for_update para evitar condiciones de carrera
             siguiente_cod_com = 1
             ultima_compra = Compra.objects.filter(
                 id_adm=usuario_id
@@ -1329,21 +1326,21 @@ def crear_compra(request):
             if ultima_compra:
                 siguiente_cod_com = ultima_compra.cod_com + 1
             
-            # Crear la compra con validación adicional
+            # Crear la compra - NUNCA pasar None, siempre 0.0
             try:
                 compra = Compra.objects.create(
-                    id_com=siguiente_id_com,  # ID global único
-                    cod_com=siguiente_cod_com,  # Código por administrador
+                    id_com=siguiente_id_com,
+                    cod_com=siguiente_cod_com,
                     id_adm_id=usuario_id,
                     fecha=fecha,
                     nom_prov=nom_prov,
                     cantidad=cantidad,
-                    precio_total=precio_total
+                    precio_total=precio_total,
+                    valor_licenciaCom=valor_licencia,  # Siempre será 0.0 o mayor
+                    valor_transporteCom=valor_transporte  # Siempre será 0.0 o mayor
                 )
             except Exception as create_error:
-                # Si hay error en la creación, manejar específicamente el error de clave duplicada
                 if "Duplicate entry" in str(create_error):
-                    # Intentar con el siguiente número disponible
                     max_cod_com = Compra.objects.filter(
                         id_adm=usuario_id
                     ).aggregate(max_cod=models.Max('cod_com'))['max_cod'] or 0
@@ -1356,75 +1353,62 @@ def crear_compra(request):
                         fecha=fecha,
                         nom_prov=nom_prov,
                         cantidad=cantidad,
-                        precio_total=precio_total
+                        precio_total=precio_total,
+                        valor_licenciaCom=valor_licencia,
+                        valor_transporteCom=valor_transporte
                     )
                 else:
                     raise create_error
             
-            # Procesar detalles de animales
+            # Resto del código para crear detalles...
             detalles_creados = 0
             for i in range(1, cantidad + 1):
-                # Obtener valores con validación
                 cod_ani = request.POST.get(f'cod_ani_{i}', '').strip()
                 edad_aniCom = request.POST.get(f'edad_aniCom_{i}', '').strip()
                 
-                # Validar edad_aniCom como texto (puede ser "1-2", "adulto", etc.)
                 if not edad_aniCom:
                     edad_aniCom = "No especificada"
                 
-                # FORMA CORRECTA de manejar Decimal con soporte para formato con coma
                 peso_str = request.POST.get(f'peso_aniCom_{i}', '0,00')
-                peso_aniCom = None
-                if peso_str and peso_str.strip():  # Verificar que no esté vacío
+                peso_aniCom = Decimal('0')
+                if peso_str and peso_str.strip():
                     try:
-                        # Permitir entrada con coma como separador decimal
                         peso_normalizado = peso_str.replace(',', '.')
                         peso_aniCom = Decimal(peso_normalizado)
-                        
-                        # Validar que el peso sea positivo
                         if peso_aniCom <= 0:
-                            messages.warning(request, f"Advertencia: El peso del animal {i} debe ser mayor que cero. Se usará 0 como valor por defecto.")
                             peso_aniCom = Decimal('0')
-                            
                     except (ValueError, InvalidOperation):
-                        messages.warning(request, f"Advertencia: El peso del animal {i} no es válido. Se usará 0 como valor por defecto.")
                         peso_aniCom = Decimal('0')
                 
-                # Asegurar que los campos no sean None o cadenas vacías
                 if not cod_ani:
-                    messages.warning(request, f"Advertencia: Código de animal faltante para el animal {i}. Se omite este detalle.")
                     continue
                 
-                # Formatear correctamente el precio unitario
                 precio_uni_str = request.POST.get(f'precio_uni_{i}', '0')
-                precio_uni_str = precio_uni_str.replace('.', '')  # Eliminar puntos de miles
-                precio_uni_str = precio_uni_str.replace(',', '.')  # Reemplazar coma decimal por punto
+                precio_uni_str = precio_uni_str.replace('.', '').replace(',', '.')
                 
                 try:
                     precio_uni = float(precio_uni_str)
                 except ValueError:
-                    messages.warning(request, f"Advertencia: Precio unitario inválido para el animal {i}. Se usará 0.")
                     precio_uni = 0.0
                 
-                # Crear el detalle de compra con valores por defecto si están vacíos
                 try:
                     DetCom.objects.create(
                         cod_com=compra,
                         cod_ani=cod_ani,
-                        edad_aniCom=edad_aniCom,  # Ya es string
-                        peso_aniCom=peso_aniCom or Decimal('0'),
+                        edad_aniCom=edad_aniCom,
+                        peso_aniCom=peso_aniCom,
                         precio_uni=precio_uni,
                     )
                     detalles_creados += 1
                 except Exception as detalle_error:
-                    messages.warning(request, f"Error al crear detalle para animal {i}: {str(detalle_error)}")
                     continue
             
-            # Mensaje de éxito con información adicional
+            # Mensaje de éxito
+            mensaje_exito = f"Compra registrada exitosamente"
             if detalles_creados > 0:
-                messages.success(request, f"Compra #{siguiente_cod_com} registrada exitosamente con {detalles_creados} detalles de animales.")
+                messages.success(request, mensaje_exito)
             else:
-                messages.warning(request, f"Compra #{siguiente_cod_com} registrada, pero no se pudieron crear los detalles de animales.")
+                messages.warning(request, f"Compra registrada, pero no se pudieron crear los detalles de animales.")
             
             return redirect('compras')
             
@@ -1433,7 +1417,7 @@ def crear_compra(request):
             return redirect('compras')
     else:
         return redirect('compras')
-           
+                  
 @login_required
 def editar_compra(request, cod_com):
     """
@@ -1484,11 +1468,39 @@ def editar_compra(request, cod_com):
                     messages.error(request, "El precio total debe ser un número válido.")
                     return redirect('compras')
                 
-                # Actualizar la compra
+                # VALOR LICENCIA - SIEMPRE asignar 0.0 si está vacío (igual que en crear_compra)
+                valor_licencia_str = request.POST.get('valor_licencia', '').strip()
+                valor_licencia = 0.0  # Valor por defecto
+                
+                if valor_licencia_str:  # Si hay algo en el campo
+                    valor_licencia_str = valor_licencia_str.replace('.', '').replace(',', '.')
+                    try:
+                        valor_licencia = float(valor_licencia_str)
+                        if valor_licencia < 0:
+                            valor_licencia = 0.0
+                    except ValueError:
+                        valor_licencia = 0.0
+                
+                # VALOR TRANSPORTE - SIEMPRE asignar 0.0 si está vacío (igual que en crear_compra)
+                valor_transporte_str = request.POST.get('valor_transporte', '').strip()
+                valor_transporte = 0.0  # Valor por defecto
+                
+                if valor_transporte_str:  # Si hay algo en el campo
+                    valor_transporte_str = valor_transporte_str.replace('.', '').replace(',', '.')
+                    try:
+                        valor_transporte = float(valor_transporte_str)
+                        if valor_transporte < 0:
+                            valor_transporte = 0.0
+                    except ValueError:
+                        valor_transporte = 0.0
+                
+                # Actualizar la compra - NUNCA pasar None, siempre 0.0
                 compra.fecha = fecha
                 compra.nom_prov = nom_prov
                 compra.cantidad = cantidad
                 compra.precio_total = precio_total
+                compra.valor_licenciaCom = valor_licencia  # Siempre será 0.0 o mayor
+                compra.valor_transporteCom = valor_transporte  # Siempre será 0.0 o mayor
                 compra.save()
                 
                 # Eliminar detalles existentes
@@ -1551,16 +1563,36 @@ def editar_compra(request, cod_com):
                     except Exception as e:
                         errores_detalles.append(f"Animal {i}: Error al actualizar.")
                 
-                # Mostrar mensaje según el resultado
+                # Mensaje de éxito actualizado
+                mensaje_base = ""
                 if detalles_creados == 0:
-                    messages.error(request, "No se pudo actualizar ningún detalle válido.")
+                    mensaje_base = "No se pudo actualizar ningún detalle válido."
                 elif errores_detalles:
-                    warning_msg = f"Compra actualizada. Se procesaron {detalles_creados} de {cantidad} animales."
+                    mensaje_base = f"Compra actualizada. Se procesaron {detalles_creados} de {cantidad} animales."
                     if len(errores_detalles) <= 2:
-                        warning_msg += " Errores: " + "; ".join(errores_detalles)
-                    messages.warning(request, warning_msg)
+                        mensaje_base += " Errores: " + "; ".join(errores_detalles)
                 else:
-                    messages.success(request, "Compra actualizada exitosamente.")
+                    mensaje_base = "Compra actualizada exitosamente"
+                
+                # Mostrar valores adicionales solo si son mayor a 0
+                valores_actualizados = []
+                if valor_licencia > 0:
+                    valores_actualizados.append(f"licencia: ${valor_licencia:,.2f}")
+                if valor_transporte > 0:
+                    valores_actualizados.append(f"transporte: ${valor_transporte:,.2f}")
+                
+                if valores_actualizados and detalles_creados > 0:
+                    mensaje_base += f" (incluye {', '.join(valores_actualizados)})"
+                elif valores_actualizados:
+                    mensaje_base += f". Valores incluidos: {', '.join(valores_actualizados)}"
+                
+                # Mostrar el mensaje apropiado
+                if detalles_creados == 0:
+                    messages.error(request, mensaje_base)
+                elif errores_detalles:
+                    messages.warning(request, mensaje_base)
+                else:
+                    messages.success(request, mensaje_base + ".")
                 
                 return redirect('compras')
                 
@@ -1570,7 +1602,7 @@ def editar_compra(request, cod_com):
     
     else:
         return redirect('compras')
-       
+           
 @login_required
 def eliminar_compra(request, compra_id):
     """Vista para eliminar una compra y sus detalles"""

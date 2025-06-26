@@ -135,6 +135,8 @@ class Compra(models.Model):
     nom_prov = models.CharField(max_length=255)
     cantidad = models.IntegerField()
     fecha = models.DateField()
+    valor_licenciaCom = models.FloatField()
+    valor_transporteCom = models.FloatField()
     precio_total = models.FloatField()
     id_adm = models.ForeignKey(Administrador, models.DO_NOTHING, db_column='id_adm')
     
@@ -217,6 +219,8 @@ class Venta(models.Model):
     nom_cli = models.CharField(max_length=255)
     cantidad = models.IntegerField()
     fecha = models.DateField()
+    valor_licenciaVen = models.FloatField(null=True, blank=True)  # Valor de la licencia, opcional
+    valor_transporteVen = models.FloatField(null=True, blank=True)  # Valor del
     precio_total = models.FloatField()
     id_adm = models.ForeignKey(Administrador, models.DO_NOTHING, db_column='id_adm')
     
