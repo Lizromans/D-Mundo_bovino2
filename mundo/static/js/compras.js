@@ -58,9 +58,14 @@ function actualizarFormularioAnimales() {
 
     console.log(`Contenedor limpio: ${contenedor.children.length} elementos`);
 
-    // Si no hay animales, no hay nada que hacer
+    // Si no hay animales, resetear precio total
     if (cantidad <= 0) {
         console.log('Cantidad es 0 o negativa, no se generan campos');
+        // Limpiar precio total
+        const precioTotalInput = document.getElementById('precio_total');
+        if (precioTotalInput) {
+            precioTotalInput.value = '';
+        }
         return;
     }
 
@@ -137,32 +142,8 @@ function actualizarFormularioAnimales() {
         });
     });
 
-    // Actualizar formato del campo de precio total
-    const precioTotalInput = document.getElementById('precio_total');
-    if (precioTotalInput) {
-        const precioTotalContainer = precioTotalInput.parentElement;
-        const yaFormateado = precioTotalContainer.querySelector('.input-group-text');
-
-        if (!yaFormateado) {
-            console.log('Formateando campo de precio total');
-            // Envolver el input en un input-group con el símbolo de pesos
-            const inputGroup = document.createElement('div');
-            inputGroup.className = 'input-group';
-
-            const currencySymbol = document.createElement('span');
-            currencySymbol.className = 'input-group-text';
-            currencySymbol.textContent = '$';
-
-            precioTotalInput.parentNode.insertBefore(inputGroup, precioTotalInput);
-            inputGroup.appendChild(currencySymbol);
-            inputGroup.appendChild(precioTotalInput);
-
-            // Actualizar los atributos del input
-            precioTotalInput.setAttribute('readonly', true);
-        }
-    } else {
-        console.warn('No se encontró el campo de precio total');
-    }
+    // Calcular precio total inicial después de generar campos
+    calcularPrecioTotal();
 }
 
 // Función para formatear los valores a pesos colombianos
@@ -212,9 +193,9 @@ function calcularPrecioTotal() {
         }
     }
 
-    // Obtener valores de transporte y licencia
-    const transporteInput = document.getElementById('transporte');
-    const licenciaInput = document.getElementById('licencia');
+    // Obtener valores de transporte y licencia - IDs corregidos
+    const transporteInput = document.getElementById('valor_transporte');
+    const licenciaInput = document.getElementById('valor_licencia');
     
     const valorTransporte = obtenerValorNumerico(transporteInput);
     const valorLicencia = obtenerValorNumerico(licenciaInput);
@@ -250,9 +231,9 @@ function recalcularPrecioTotal(compraId) {
         totalAnimales += precio;
     });
     
-    // Obtener valores de transporte y licencia del modal de edición
-    const transporteInput = document.getElementById('transporte-edit-' + compraId);
-    const licenciaInput = document.getElementById('licencia-edit-' + compraId);
+    // Obtener valores de transporte y licencia del modal de edición - IDs corregidos
+    const transporteInput = document.getElementById('valor_transporte-edit-' + compraId);
+    const licenciaInput = document.getElementById('valor_licencia-edit-' + compraId);
     
     const valorTransporte = obtenerValorNumerico(transporteInput);
     const valorLicencia = obtenerValorNumerico(licenciaInput);
@@ -292,29 +273,21 @@ function verificarEstructuraHTML() {
         console.log(`Contenedor de detalles encontrado, contiene ${contenedor.children.length} elementos`);
     }
 
-    // Verificar campos de transporte y licencia
-    const transporteInput = document.getElementById('transporte');
-    const licenciaInput = document.getElementById('licencia');
+    // Verificar campos de transporte y licencia - IDs corregidos
+    const transporteInput = document.getElementById('valor_transporte');
+    const licenciaInput = document.getElementById('valor_licencia');
     
     if (!transporteInput) {
-        console.warn('No se encontró el campo de transporte (ID: transporte)');
+        console.warn('No se encontró el campo de transporte (ID: valor_transporte)');
     } else {
         console.log(`Campo de transporte encontrado, valor: ${transporteInput.value}`);
     }
     
     if (!licenciaInput) {
-        console.warn('No se encontró el campo de licencia (ID: licencia)');
+        console.warn('No se encontró el campo de licencia (ID: valor_licencia)');
     } else {
         console.log(`Campo de licencia encontrado, valor: ${licenciaInput.value}`);
     }
-
-    // Verificar si hay múltiples elementos con IDs duplicados
-    ['cantidad', 'detalles_animales', 'precio_total', 'transporte', 'licencia'].forEach(id => {
-        const elementos = document.querySelectorAll(`#${id}`);
-        if (elementos.length > 1) {
-            console.error(`¡ALERTA! Se encontraron ${elementos.length} elementos con el ID "${id}"`);
-        }
-    });
 
     console.log('--- Fin de verificación HTML ---');
 }
@@ -367,14 +340,23 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('No se encontró el campo de cantidad');
     }
 
-    // Configurar event listeners para los campos de transporte y licencia
-    const transporteInput = document.getElementById('transporte');
-    const licenciaInput = document.getElementById('licencia');
+    // Configurar event listeners para los campos de transporte y licencia - IDs corregidos
+    const transporteInput = document.getElementById('valor_transporte');
+    const licenciaInput = document.getElementById('valor_licencia');
 
     if (transporteInput) {
         transporteInput.addEventListener('change', function() {
             formatearPrecioCOP(this);
             calcularPrecioTotal();
+        });
+        
+        // También agregar listener para el evento 'input' para recálculo en tiempo real
+        transporteInput.addEventListener('input', function() {
+            clearTimeout(window.transporteTimeout);
+            window.transporteTimeout = setTimeout(() => {
+                formatearPrecioCOP(this);
+                calcularPrecioTotal();
+            }, 300);
         });
     }
 
@@ -382,6 +364,15 @@ document.addEventListener('DOMContentLoaded', function() {
         licenciaInput.addEventListener('change', function() {
             formatearPrecioCOP(this);
             calcularPrecioTotal();
+        });
+        
+        // También agregar listener para el evento 'input' para recálculo en tiempo real
+        licenciaInput.addEventListener('input', function() {
+            clearTimeout(window.licenciaTimeout);
+            window.licenciaTimeout = setTimeout(() => {
+                formatearPrecioCOP(this);
+                calcularPrecioTotal();
+            }, 300);
         });
     }
 
@@ -402,8 +393,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Escuchar cambios en transporte y licencia de modales de edición
-    document.querySelectorAll('[id^="transporte-edit-"], [id^="licencia-edit-"]').forEach(input => {
+    // Escuchar cambios en transporte y licencia de modales de edición - IDs corregidos
+    document.querySelectorAll('[id^="valor_transporte-edit-"], [id^="valor_licencia-edit-"]').forEach(input => {
         input.addEventListener('change', function() {
             formatearPrecioCOP(this);
             
@@ -434,25 +425,5 @@ document.addEventListener('DOMContentLoaded', function() {
         recalcularPrecioTotal(compraId);
     });
 
-    // Verificar si hay múltiples scripts de compras.js
-    const scripts = document.querySelectorAll('script');
-    let contadorComprasJS = 0;
-
-    scripts.forEach(script => {
-        if (script.src && script.src.includes('compras.js')) {
-            contadorComprasJS++;
-        }
-    });
-
-    if (contadorComprasJS > 1) {
-        console.error(`¡ALERTA! Se encontraron ${contadorComprasJS} scripts de compras.js incluidos`);
-    }
-
-    // Ejecutar la actualización inicial del formulario
-    console.log('Iniciando actualización inicial del formulario');
-    try {
-        actualizarFormularioAnimales();
-    } catch (error) {
-        manejarError(error, 'actualización inicial');
-    }
+    console.log('Inicialización completada');
 });
