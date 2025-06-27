@@ -136,26 +136,42 @@
                                             
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
-                                                    <label for="fecha-edit-{{ venta.cod_ven  }}">Fecha de Venta:</label>
-                                                    <input type="date" id="fecha-edit-{{ venta.cod_ven  }}" name="fecha" class="form-control" value="{{ venta.fecha|date:'Y-m-d' }}" required>
+                                                    <label for="fecha-edit-{{ compra.cod_com }}">Fecha de Venta:</label>
+                                                    <input type="date" id="fecha-edit-{{ venta.cod_ven }}" name="fecha" class="form-control" value="{{ venta.fecha|date:'Y-m-d' }}" required>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label for="nom_cli-edit-{{ venta.cod_ven  }}">Cliente:</label>
-                                                    <input type="text" id="nom_cli-edit-{{ venta.cod_ven }}" name="nom_cli" class="form-control" value="{{ venta.nom_cli }}" required>
+                                                    <label for="nom_prov-edit-{{ venta.cod_ven }}">Cliente:</label>
+                                                    <input type="text" id="nom_prov-edit-{{ venta.cod_ven }}" name="nom_prov" class="form-control" value="{{ venta.nom_cli }}" required>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="valor_licencia-edit-{{ venta.cod_ven }}">Valor Licencia (Opcional):</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">$</span>
+                                                        <input type="text" id="valor_licencia-edit-{{ venta.cod_ven }}" name="valor_licencia" class="form-control" value="{% if venta.valor_licenciaVen %}{{ venta.valor_licenciaVen|floatformat:0 }}{% endif %}" placeholder="0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="valor_transporte-edit-{{ venta.cod_ven }}">Valor Transporte (Opcional):</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">$</span>
+                                                        <input type="text" id="valor_transporte-edit-{{ venta.cod_ven }}" name="valor_transporte" class="form-control" value="{% if venta.valor_transporteVen %}{{ venta.valor_transporteVen|floatformat:0 }}{% endif %}" placeholder="0">
+                                                    </div>
                                                 </div>
                                             </div>
                                             
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
-                                                    <label for="cantidad-edit-{{ venta.cod_ven  }}">Cantidad de Animales:</label>
-                                                    <input type="number" id="cantidad-edit-{{ venta.cod_ven  }}" name="cantidad" class="form-control" min="1" value="{{ venta.cantidad }}" readonly>
+                                                    <label for="cantidad-edit-{{ venta.cod_ven }}">Cantidad de Animales:</label>
+                                                    <input type="number" id="cantidad-edit-{{ venta.cod_ven }}" name="cantidad" class="form-control" min="1" value="{{ venta.cantidad }}" readonly>
                                                     <small class="form-text text-muted">La cantidad de animales no puede ser modificada directamente.</small>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label for="precio_total-edit-{{ venta.cod_ven  }}">Precio Total:</label>
+                                                    <label for="precio_total-edit-{{ venta.cod_ven }}">Precio Total:</label>
                                                     <div class="input-group">
                                                         <span class="input-group-text">$</span>
-                                                        <input type="text" id="precio_total-edit-{{ venta.cod_ven  }}" name="precio_total" class="form-control" value="{{ venta.precio_total|floatformat:0 }}" readonly>
+                                                        <input type="text" id="precio_total-edit-{{ venta.cod_ven }}" name="precio_total" class="form-control" value="{{ venta.precio_total|floatformat:0 }}" readonly>
                                                     </div>
                                                     <small class="form-text text-muted">El precio total se calculará automáticamente.</small>
                                                 </div>
@@ -183,9 +199,11 @@
                                                             <td>
                                                                 <select class="form-select edad-edit" name="edad_aniven_{{ forloop.counter0 }}" required>
                                                                     <option value="" disabled>Selecciona una edad</option>
-                                                                    <option value="1-2" {% if detalle.edad_aniven == "1-2" %}selected{% endif %}>1 - 2 años</option>
-                                                                    <option value="2-3" {% if detalle.edad_aniven == "2-3" %}selected{% endif %}>2 - 3 años</option> 
-                                                                    <option value="3-4" {% if detalle.edad_aniven == "3-4" %}selected{% endif %}>3 - 4 años</option>                                                   
+                                                                    <option value="0 - 1" {% if detalle.edad_aniven == "0 - 1" %}selected{% endif %}>0 - 1 años</option>
+                                                                    <option value="1 - 2 " {% if detalle.edad_aniven == "1 - 2" %}selected{% endif %}>1 - 2 años</option>
+                                                                    <option value="2 - 3" {% if detalle.edad_aniven == "2 - 3" %}selected{% endif %}>2 - 3 años</option> 
+                                                                    <option value="3 - 4" {% if detalle.edad_aniven == "3 - 4" %}selected{% endif %}>3 - 4 años</option>
+                                                                    <option value="4 - mas" {% if detalle.edad_aniven == "4 - mas" %}selected{% endif %}>4 años -  más</option>                                                 
                                                                 </select>
                                                             </td>
                                                             <td>
@@ -237,6 +255,14 @@
                                                     <tr>
                                                         <th>Cliente:</th>
                                                         <td>{{ venta.nom_cli }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Valor Licencia:</th>
+                                                        <td>${{ venta.valor_licenciaVen|floatformat:0|intcomma }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Valor Transporte:</th>
+                                                        <td>${{ venta.valor_transporteVen|floatformat:0|intcomma }}</td>
                                                     </tr>
                                                     <tr>
                                                         <th>Cantidad de Animales:</th>
@@ -311,26 +337,40 @@
                         {% csrf_token %}
                         
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="fecha">Fecha de Venta:</label>
                                 <input type="date" id="fecha" name="fecha" class="form-control" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="nom_cli">Cliente:</label>
                                 <input type="text" id="nom_cli" name="nom_cli" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="valor_licencia">Valor Licencia (Opcional):</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="text" id="valor_licencia" name="valor_licencia" class="form-control" placeholder="0">
+                                </div>
                             </div>
                         </div>
                         
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                             <div class="col-md-4">
+                                <label for="valor_transporte">Valor Transporte (Opcional):</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="text" id="valor_transporte" name="valor_transporte" class="form-control" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <label for="cantidad">Cantidad de Animales:</label>
                                 <input type="number" id="cantidad" name="cantidad" class="form-control" min="1" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <label for="precio_total">Precio Total:</label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
-                                    <input type="text" id="precio_total" name="precio_total" class="form-control" readonly>
+                                    <input type="text" id="precio_total" name="precio_total" class="form-control" placeholder="0" readonly>
                                 </div>
                             </div>
                         </div>

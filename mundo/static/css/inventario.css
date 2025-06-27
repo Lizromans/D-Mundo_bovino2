@@ -208,7 +208,7 @@ button {
 }
         
 .tab-content {
-    min-height: 400px;
+    min-height: 200px;
 }
       
 
@@ -216,7 +216,6 @@ button {
 .fichas-container {
     display: flex;
     flex-wrap: wrap;
-    margin-bottom: 6.4%;
 }
 
 .col-md-3 {
@@ -528,14 +527,10 @@ button {
 
 /* Desktop pequeño */
 @media screen and (min-width: 1024px) and (max-width: 1399px) {
-    .fichas {
-        margin-bottom: 15px;
-    }
 
     .fichas-container {
         display: flex;
         flex-wrap: wrap;
-        margin-bottom: 5.3%;
     }
 
     .col-12{

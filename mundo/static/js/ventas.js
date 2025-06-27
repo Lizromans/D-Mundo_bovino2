@@ -108,6 +108,25 @@ function validarYFormatearPeso(input) {
     return true;
 }
 
+// Función para determinar el rango de edad basado en la edad numérica
+function determinarRangoEdad(edad) {
+    const edadNum = parseFloat(edad);
+    
+    if (edadNum >= 0 && edadNum < 1) {
+        return '0 - 1';
+    } else if (edadNum >= 1 && edadNum < 2) {
+        return '1 - 2';
+    } else if (edadNum >= 2 && edadNum < 3) {
+        return '2 - 3';
+    } else if (edadNum >= 3 && edadNum < 4) {
+        return '3 - 4';
+    } else if (edadNum >= 4) {
+        return '4 - mas';
+    }
+    
+    return null;
+}
+
 // Función para actualizar el formulario de animales basado en la cantidad
 async function actualizarFormularioAnimales() {
     contadorActualizaciones++;
@@ -127,6 +146,11 @@ async function actualizarFormularioAnimales() {
 
     if (cantidad <= 0) {
         console.log('Cantidad es 0 o negativa, no se generan campos');
+        // Limpiar precio total
+        const precioTotalInput = document.getElementById('precio_total');
+        if (precioTotalInput) {
+            precioTotalInput.value = '';
+        }
         return;
     }
 
@@ -159,9 +183,11 @@ async function actualizarFormularioAnimales() {
                     <label for="edad_aniven_${i}">Edad:</label>
                     <select id="edad_aniven_${i}" name="edad_aniven_${i}" class="form-select" required>
                         <option value="" disabled selected>Selecciona una edad</option>
-                        <option value="1-2">1 - 2 años</option>
-                        <option value="2-3">2 - 3 años</option>
-                        <option value="3-4">3 - 4 años</option>
+                        <option value="0 - 1">0 - 1 años</option>
+                        <option value="1 - 2">1 - 2 años</option>
+                        <option value="2 - 3">2 - 3 años</option>
+                        <option value="3 - 4">3 - 4 años</option>
+                        <option value="4 - mas">4 años - más</option>
                     </select>
                 </div>
             </div>
@@ -192,24 +218,51 @@ async function actualizarFormularioAnimales() {
         // Agregar evento para autocompletar peso cuando se selecciona un animal
         selectAnimales.addEventListener('change', function() {
             const codigoSeleccionado = this.value;
-            const animalSeleccionado = animalesDisponibles.find(animal => animal.cod_ani == codigoSeleccionado);
+            console.log(`Animal seleccionado: ${codigoSeleccionado}`);
+            
+            if (!codigoSeleccionado) {
+                console.log('No se seleccionó ningún animal válido');
+                return;
+            }
+            
+            // Buscar el animal en la lista de disponibles
+            const animalSeleccionado = animalesDisponibles.find(animal => 
+                animal.cod_ani.toString() === codigoSeleccionado.toString()
+            );
+            
+            console.log('Animal encontrado:', animalSeleccionado);
             
             if (animalSeleccionado) {
                 // Autocompletar peso si está disponible
                 const pesoInput = document.getElementById(`peso_aniven_${i}`);
                 if (pesoInput && animalSeleccionado.peso) {
-                    pesoInput.value = animalSeleccionado.peso.toString().replace('.', ',');
+                    let pesoFormateado = animalSeleccionado.peso.toString();
+                    // Convertir punto decimal a coma si es necesario
+                    if (pesoFormateado.includes('.')) {
+                        pesoFormateado = pesoFormateado.replace('.', ',');
+                    }
+                    pesoInput.value = pesoFormateado;
+                    console.log(`Peso autocompletado para animal ${i}: ${pesoFormateado}`);
+                } else {
+                    console.log(`No se pudo autocompletar el peso para animal ${i}. Input encontrado:`, !!pesoInput, 'Peso disponible:', animalSeleccionado.peso);
                 }
                 
                 // Autocompletar edad si está disponible
                 const edadSelect = document.getElementById(`edad_aniven_${i}`);
                 if (edadSelect && animalSeleccionado.edad) {
-                    // Intentar encontrar la opción más cercana
-                    const edad = parseInt(animalSeleccionado.edad);
-                    if (edad >= 1 && edad < 2) edadSelect.value = '1-2';
-                    else if (edad >= 2 && edad < 3) edadSelect.value = '2-3';
-                    else if (edad >= 3 && edad <= 4) edadSelect.value = '3-4';
+                    const rangoEdad = determinarRangoEdad(animalSeleccionado.edad);
+                    if (rangoEdad) {
+                        edadSelect.value = rangoEdad;
+                        console.log(`Edad autocompletada para animal ${i}: ${rangoEdad} (edad original: ${animalSeleccionado.edad})`);
+                    } else {
+                        console.log(`No se pudo determinar el rango de edad para: ${animalSeleccionado.edad}`);
+                    }
+                } else {
+                    console.log(`No se pudo autocompletar la edad para animal ${i}. Select encontrado:`, !!edadSelect, 'Edad disponible:', animalSeleccionado.edad);
                 }
+            } else {
+                console.log(`No se encontró el animal con código: ${codigoSeleccionado}`);
+                console.log('Animales disponibles:', animalesDisponibles.map(a => a.cod_ani));
             }
         });
     }
@@ -234,6 +287,9 @@ async function actualizarFormularioAnimales() {
             calcularPrecioTotal();
         });
     });
+
+    // Calcular precio total inicial después de generar campos
+    calcularPrecioTotal();
 
     // Actualizar formato del campo de precio total
     const precioTotalInput = document.getElementById('precio_total');
@@ -272,27 +328,57 @@ function formatearPrecioCOP(input) {
     }
 }
 
-// Función para calcular el precio total basado en los precios unitarios
+// Función para validar peso en formularios de edición
+function validarPesoEdicion(input) {
+    return validarYFormatearPeso(input);
+}
+
+// Función para obtener valor numérico de un input formateado
+function obtenerValorNumerico(input) {
+    if (!input || !input.value) return 0;
+    const valorTexto = input.value.replace(/[^\d]/g, '');
+    return parseFloat(valorTexto) || 0;
+}
+
+// Función para calcular el precio total basado en los precios unitarios, transporte y licencia
 function calcularPrecioTotal() {
     const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
-    let total = 0;
+    let totalAnimales = 0;
 
     console.log(`Calculando precio total para ${cantidad} animales`);
 
+    // Sumar precios de los animales
     for (let i = 1; i <= cantidad; i++) {
         const precioInput = document.getElementById(`precio_uni_${i}`);
 
         if (precioInput) {
-            const precioTexto = precioInput.value.replace(/[^\d]/g, '');
-            const precio = parseFloat(precioTexto) || 0;
-            total += precio;
+            const precio = obtenerValorNumerico(precioInput);
+            totalAnimales += precio;
+            console.log(`Animal #${i}: Precio = ${precio}, Total acumulado animales = ${totalAnimales}`);
+        } else {
+            console.warn(`No se encontró el campo de precio para el animal #${i}`);
         }
     }
 
+    // Obtener valores de transporte y licencia
+    const transporteInput = document.getElementById('valor_transporte');
+    const licenciaInput = document.getElementById('valor_licencia');
+    
+    const valorTransporte = obtenerValorNumerico(transporteInput);
+    const valorLicencia = obtenerValorNumerico(licenciaInput);
+    
+    console.log(`Transporte: ${valorTransporte}, Licencia: ${valorLicencia}`);
+
+    // Calcular total final
+    const totalFinal = totalAnimales + valorTransporte + valorLicencia;
+
+    // Actualizar el campo de precio total con formato
     const precioTotalInput = document.getElementById('precio_total');
     if (precioTotalInput) {
-        precioTotalInput.value = total.toLocaleString('es-CO');
-        console.log(`Precio total actualizado: ${precioTotalInput.value}`);
+        precioTotalInput.value = totalFinal.toLocaleString('es-CO');
+        console.log(`Precio total actualizado: ${precioTotalInput.value} (Animales: ${totalAnimales}, Transporte: ${valorTransporte}, Licencia: ${valorLicencia})`);
+    } else {
+        console.warn('No se encontró el campo de precio total');
     }
 }
 
@@ -304,17 +390,33 @@ function recalcularPrecioTotal(ventaId) {
         return;
     }
 
-    let total = 0;
+    let totalAnimales = 0;
     
+    // Sumar todos los precios unitarios de los animales
     modal.querySelectorAll('.precio-uni-edit').forEach(input => {
-        const precioTexto = input.value.replace(/[^\d]/g, '');
-        const precio = parseFloat(precioTexto) || 0;
-        total += precio;
+        const precio = obtenerValorNumerico(input);
+        totalAnimales += precio;
     });
     
+    // Obtener valores de transporte y licencia del modal de edición
+    const transporteInput = document.getElementById('valor_transporte-edit-' + ventaId);
+    const licenciaInput = document.getElementById('valor_licencia-edit-' + ventaId);
+    
+    const valorTransporte = obtenerValorNumerico(transporteInput);
+    const valorLicencia = obtenerValorNumerico(licenciaInput);
+    
+    console.log(`Edición venta ${ventaId} - Animales: ${totalAnimales}, Transporte: ${valorTransporte}, Licencia: ${valorLicencia}`);
+    
+    // Calcular total final
+    const totalFinal = totalAnimales + valorTransporte + valorLicencia;
+    
+    // Actualizar el precio total
     const precioTotalInput = document.getElementById('precio_total-edit-' + ventaId);
     if (precioTotalInput) {
-        precioTotalInput.value = total.toLocaleString('es-CO');
+        precioTotalInput.value = totalFinal.toLocaleString('es-CO');
+        console.log(`Precio total actualizado para venta ${ventaId}: ${precioTotalInput.value}`);
+    } else {
+        console.error(`No se encontró el campo precio_total-edit-${ventaId}`);
     }
 }
 
@@ -344,6 +446,42 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
+    // Configurar event listeners para los campos de transporte y licencia
+    const transporteInput = document.getElementById('valor_transporte');
+    const licenciaInput = document.getElementById('valor_licencia');
+
+    if (transporteInput) {
+        transporteInput.addEventListener('change', function() {
+            formatearPrecioCOP(this);
+            calcularPrecioTotal();
+        });
+        
+        // También agregar listener para el evento 'input' para recálculo en tiempo real
+        transporteInput.addEventListener('input', function() {
+            clearTimeout(window.transporteTimeout);
+            window.transporteTimeout = setTimeout(() => {
+                formatearPrecioCOP(this);
+                calcularPrecioTotal();
+            }, 300);
+        });
+    }
+
+    if (licenciaInput) {
+        licenciaInput.addEventListener('change', function() {
+            formatearPrecioCOP(this);
+            calcularPrecioTotal();
+        });
+        
+        // También agregar listener para el evento 'input' para recálculo en tiempo real
+        licenciaInput.addEventListener('input', function() {
+            clearTimeout(window.licenciaTimeout);
+            window.licenciaTimeout = setTimeout(() => {
+                formatearPrecioCOP(this);
+                calcularPrecioTotal();
+            }, 300);
+        });
+    }
+
     // Funcionalidad para editar ventas
     document.querySelectorAll('.precio-uni-edit').forEach(input => {
         input.addEventListener('change', function() {
@@ -351,6 +489,21 @@ document.addEventListener('DOMContentLoaded', async function() {
             const ventaId = this.getAttribute('data-venta');
             if (ventaId) {
                 recalcularPrecioTotal(ventaId);
+            }
+        });
+    });
+
+    // Escuchar cambios en transporte y licencia de modales de edición
+    document.querySelectorAll('[id^="valor_transporte-edit-"], [id^="valor_licencia-edit-"]').forEach(input => {
+        input.addEventListener('change', function() {
+            formatearPrecioCOP(this);
+            
+            // Extraer el ID de la venta del ID del input
+            const ventaId = this.id.match(/-(\d+)$/)?.[1];
+            if (ventaId) {
+                recalcularPrecioTotal(ventaId);
+            } else {
+                console.error('No se pudo extraer el ID de venta del input:', this);
             }
         });
     });

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import Http404, HttpResponse
 from django.contrib.auth.hashers import check_password, make_password
 from .forms import AdministradorRegistroForm, FormularioSoporte
 from django.core.mail import EmailMessage
@@ -433,7 +434,6 @@ def formatear_peso_animales(queryset):
             animal.peso_formateado = "0,00"
     return queryset
 
-
 @login_required
 def inventario(request):
     # Obtener el ID del administrador actual desde la sesión
@@ -629,7 +629,7 @@ def editar_animal(request, cod_ani):
             animal.estado = estado
             animal.save()
             
-            messages.success(request, f"¡Animal {cod_ani} actualizado con éxito!")
+            messages.success(request, f"¡Animal actualizado con éxito!")
             
         except Animal.DoesNotExist:
             messages.error(request, "Error: No se pudo encontrar el animal.")
@@ -649,7 +649,7 @@ def eliminar_animal(request, cod_ani):
         try:
             animal = Animal.objects.get(cod_ani=cod_ani, id_adm=usuario_id)
             animal.delete()
-            messages.success(request, f"Animal {cod_ani} eliminado con éxito.")
+            messages.success(request, f"Animal eliminado con éxito.")
             
         except Animal.DoesNotExist:
             messages.error(request, "Error: No se pudo encontrar el animal.")
@@ -1773,6 +1773,14 @@ def compra_pdf(request, compra_id):
                         <td>{compra.nom_prov}</td>
                     </tr>
                     <tr>
+                        <td class="label">Valor Licencia:</td>
+                        <td>${ compra.valor_licenciaCom:,.0f}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Valor Transporte:</td>
+                        <td>${compra.valor_transporteCom:,.0f}</td>
+                    </tr>
+                    <tr>
                         <td class="label">Cantidad de Animales:</td>
                         <td>{compra.cantidad}</td>
                     </tr>
@@ -1936,6 +1944,24 @@ def crear_venta(request):
             nom_cli = request.POST.get('nom_cli')
             cantidad = int(request.POST.get('cantidad'))
 
+            # Manejar valor de licencia
+            valor_licencia_str = request.POST.get('valor_licencia', '0')
+            if valor_licencia_str:
+                valor_licencia_str = valor_licencia_str.replace('.', '')
+                valor_licencia_str = valor_licencia_str.replace(',', '.')
+                valor_licencia = float(valor_licencia_str) if valor_licencia_str else 0
+            else:
+                valor_licencia = 0
+
+            # Manejar valor de transporte
+            valor_transporte_str = request.POST.get('valor_transporte', '0')
+            if valor_transporte_str:
+                valor_transporte_str = valor_transporte_str.replace('.', '')
+                valor_transporte_str = valor_transporte_str.replace(',', '.')
+                valor_transporte = float(valor_transporte_str) if valor_transporte_str else 0
+            else:
+                valor_transporte = 0
+
             # Formatear correctamente el precio total
             precio_total_str = request.POST.get('precio_total', '0')
             precio_total_str = precio_total_str.replace('.', '')
@@ -1982,7 +2008,9 @@ def crear_venta(request):
                 fecha=fecha,
                 nom_cli=nom_cli,
                 cantidad=cantidad,
-                precio_total=precio_total
+                precio_total=precio_total,
+                valor_licenciaVen=valor_licencia,
+                valor_transporteVen=valor_transporte
             )
             
             # Procesar detalles de animales
@@ -2037,7 +2065,7 @@ def crear_venta(request):
             return redirect('ventas')
     else:
         return redirect('ventas')
-
+    
 @login_required
 def api_animales_disponibles(request):
     """
@@ -2080,15 +2108,33 @@ def api_animales_disponibles(request):
 @transaction.atomic
 def editar_venta(request, cod_ven):
     """
-    Vista para editar una compra existente y sus detalles asociados.
+    Vista para editar una venta existente y sus detalles asociados.
     """
     venta = get_object_or_404(Venta, cod_ven=cod_ven)
     
     if request.method == 'POST':
         try:
-            # Actualizar datos de la compra
+            # Actualizar datos de la venta
             venta.fecha = request.POST.get('fecha')
             venta.nom_cli = request.POST.get('nom_cli')
+            
+            # Manejar valor de licencia
+            valor_licencia_str = request.POST.get('valor_licencia', '0')
+            if valor_licencia_str:
+                valor_licencia_str = valor_licencia_str.replace('.', '')
+                valor_licencia_str = valor_licencia_str.replace(',', '.')
+                venta.valor_licenciaVen = float(valor_licencia_str) if valor_licencia_str else 0
+            else:
+                venta.valor_licenciaVen = 0
+            
+            # Manejar valor de transporte
+            valor_transporte_str = request.POST.get('valor_transporte', '0')
+            if valor_transporte_str:
+                valor_transporte_str = valor_transporte_str.replace('.', '')
+                valor_transporte_str = valor_transporte_str.replace(',', '.')
+                venta.valor_transporteVen = float(valor_transporte_str) if valor_transporte_str else 0
+            else:
+                venta.valor_transporteVen = 0
             
             # El precio total se calcula a partir de los detalles
             nuevo_precio_total = 0
@@ -2096,18 +2142,39 @@ def editar_venta(request, cod_ven):
             # Número de detalles en el formulario
             num_detalles = int(request.POST.get('num_detalles', 0))
             
-            # Actualizar cada detalle de compra
+            # Actualizar cada detalle de venta
             for i in range(num_detalles):
-                # Usar cod_detcom en lugar de id para identificar el detalle
+                # Usar cod_detven para identificar el detalle
                 detalle_id = request.POST.get(f'detalle_id_{i}')
                 
-                # Buscar el detalle por cod_detcom en lugar de id
+                # Buscar el detalle por cod_detven
                 detalle = get_object_or_404(DetVen, cod_detven=detalle_id, cod_ven=venta)
                 
-                # Actualizar datos del detalle
+                # Actualizar edad del animal
                 detalle.edad_aniven = request.POST.get(f'edad_aniven_{i}')
-                detalle.peso_aniven = request.POST.get(f'peso_aniven_{i}')
-                detalle.precio_uni = request.POST.get(f'precio_uni_{i}')
+                
+                # Manejar peso con soporte para formato con coma
+                peso_str = request.POST.get(f'peso_aniven_{i}', '0,00')
+                if peso_str and peso_str.strip():
+                    try:
+                        peso_normalizado = peso_str.replace(',', '.')
+                        detalle.peso_aniven = Decimal(peso_normalizado)
+                        
+                        if detalle.peso_aniven <= 0:
+                            messages.error(request, f"Error: El peso del animal {i+1} debe ser mayor que cero.")
+                            return redirect('ventas')
+                            
+                    except (ValueError, InvalidOperation):
+                        messages.error(request, f"Error: El peso del animal {i+1} debe ser un número válido (ej: 15,05 o 15.05).")
+                        return redirect('ventas')
+                else:
+                    detalle.peso_aniven = 0
+                
+                # Formatear precio unitario
+                precio_uni_str = request.POST.get(f'precio_uni_{i}', '0')
+                precio_uni_str = precio_uni_str.replace('.', '')
+                precio_uni_str = precio_uni_str.replace(',', '.')
+                detalle.precio_uni = float(precio_uni_str)
                 
                 # Acumular para el precio total
                 nuevo_precio_total += float(detalle.precio_uni)
@@ -2115,18 +2182,18 @@ def editar_venta(request, cod_ven):
                 # Guardar el detalle actualizado
                 detalle.save()
             
-            # Actualizar el precio total de la compra
-            venta.precio_total = nuevo_precio_total
+            # Actualizar el precio total de la venta (suma de precios unitarios + licencia + transporte)
+            venta.precio_total = nuevo_precio_total + venta.valor_licenciaVen + venta.valor_transporteVen
             venta.save()
             
-            messages.success(request, f'Venta actualizada exitosamente.')
+            messages.success(request, f'Venta #{cod_ven} actualizada exitosamente.')
             return redirect('ventas')
             
         except Exception as e:
             messages.error(request, f'Error al actualizar la venta: {str(e)}')
             return redirect('ventas')
     
-    # Si la solicitud no es POST, redirigir a la lista de compras
+    # Si la solicitud no es POST, redirigir a la lista de ventas
     return redirect('ventas')
 
 @login_required
@@ -2155,210 +2222,238 @@ def eliminar_venta(request, venta_id):
 
 @login_required
 def venta_pdf(request, venta_id):
-    # Obtener la venta desde la base de datos
-    venta = get_object_or_404(Venta, cod_ven=venta_id)
-    
-    # Definir el HTML directamente en el código - solución más sencilla y directa
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <title>Informe de Venta #{venta.cod_ven}</title>
-        <style>
-            @page {{
-                size: letter portrait;
-                margin: 1cm 1.5cm; /* Margen reducido */
-            }}
+    """Vista para generar PDF de una venta específica"""
+    try:
+        # Obtener la venta - asumiendo que estás pasando cod_ven desde el template
+        venta = Venta.objects.filter(cod_ven=venta_id).order_by('-fecha', '-id_ven').first()
+        if not venta:
+            raise Exception(f"No se encontró ninguna venta con código {venta_id}")
+        
+        # Obtener los detalles de la venta
+        detalles = venta.detven_set.all()
+        
+        # Definir el HTML directamente en el código - solución más sencilla y directa
+        html = f"""
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+            <title>Informe de Venta #{venta.cod_ven}</title>
+            <style>
+                @page {{
+                    size: letter portrait;
+                    margin: 1cm 1.5cm; /* Margen reducido */
+                }}
 
-            .footer {{
-                position: fixed;
-                bottom: 0.8cm;
-                width: 100%;
-                text-align: right;
-                font-size: 8pt;
-                color: #666666;
-            }}
+                .footer {{
+                    position: fixed;
+                    bottom: 0.8cm;
+                    width: 100%;
+                    text-align: right;
+                    font-size: 8pt;
+                    color: #666666;
+                }}
 
-            body {{
-                font-family: Helvetica, Arial, sans-serif;
-                font-size: 10pt; /* Tamaño de fuente reducido */
-                color: #000000;
-                margin: 0;
-                padding: 0;
-            }}
+                body {{
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-size: 10pt; /* Tamaño de fuente reducido */
+                    color: #000000;
+                    margin: 0;
+                    padding: 0;
+                }}
 
-            .header {{
-                width: 100%;
-                margin-bottom: 8pt; /* Reducido */
-                padding-top: 0;
-            }}
+                .header {{
+                    width: 100%;
+                    margin-bottom: 8pt; /* Reducido */
+                    padding-top: 0;
+                }}
 
-            .timestamp {{
-                font-size: 8pt;
-                color: #666666;
-                text-align: right;
-            }}
+                .timestamp {{
+                    font-size: 8pt;
+                    color: #666666;
+                    text-align: right;
+                }}
 
-            .title {{
-                font-size: 16pt; /* Reducido */
-                font-weight: bold;
-                text-align: center;
-                margin-top: 0;
-                margin-bottom: 5pt;
-            }}
+                .title {{
+                    font-size: 16pt; /* Reducido */
+                    font-weight: bold;
+                    text-align: center;
+                    margin-top: 0;
+                    margin-bottom: 5pt;
+                }}
 
-            hr {{
-                border: none;
-                border-top: 1px solid #333333;
-                margin: 3pt 0; /* Reducido */
-            }}
+                hr {{
+                    border: none;
+                    border-top: 1px solid #333333;
+                    margin: 3pt 0; /* Reducido */
+                }}
 
-            h2 {{
-                font-size: 12pt; /* Reducido */
-                font-weight: bold;
-                margin-top: 12pt; /* Reducido */
-                margin-bottom: 6pt; /* Reducido */
-                color: #333333;
-            }}
+                h2 {{
+                    font-size: 12pt; /* Reducido */
+                    font-weight: bold;
+                    margin-top: 12pt; /* Reducido */
+                    margin-bottom: 6pt; /* Reducido */
+                    color: #333333;
+                }}
 
-            .info-table {{
-                width: 98%; /* Ligeramente reducido */
-                margin-bottom: 10pt; /* Reducido */
-                border-spacing: 0;
-                font-size: 9pt; /* Reducido */
-            }}
+                .info-table {{
+                    width: 98%; /* Ligeramente reducido */
+                    margin-bottom: 10pt; /* Reducido */
+                    border-spacing: 0;
+                    font-size: 9pt; /* Reducido */
+                }}
 
-            .info-table .label {{
-                font-weight: bold;
-                width: 30%; /* Reducido */
-                padding: 3pt 6pt 3pt 0; /* Reducido */
-                vertical-align: top;
-            }}
+                .info-table .label {{
+                    font-weight: bold;
+                    width: 30%; /* Reducido */
+                    padding: 3pt 6pt 3pt 0; /* Reducido */
+                    vertical-align: top;
+                }}
 
-            .data-table {{
-                width: 98%; /* Ligeramente reducido */
-                border-collapse: collapse;
-                margin-top: 8pt; /* Reducido */
-                font-size: 9pt; /* Reducido */
-            }}
+                .data-table {{
+                    width: 98%; /* Ligeramente reducido */
+                    border-collapse: collapse;
+                    margin-top: 8pt; /* Reducido */
+                    font-size: 9pt; /* Reducido */
+                }}
 
-            .data-table th {{
-                background-color: #f2f2f2;
-                font-weight: bold;
-                text-align: left;
-                padding: 2pt 4pt; /* Reducido */
-                border-bottom: 1pt solid #dddddd;
-            }}
-            
-            .data-table td {{
-                padding: 2pt 4pt; /* Reducido */
-                border-bottom: 1pt solid #dddddd;
-            }}
+                .data-table th {{
+                    background-color: #f2f2f2;
+                    font-weight: bold;
+                    text-align: left;
+                    padding: 2pt 4pt; /* Reducido */
+                    border-bottom: 1pt solid #dddddd;
+                }}
+                
+                .data-table td {{
+                    padding: 2pt 4pt; /* Reducido */
+                    border-bottom: 1pt solid #dddddd;
+                }}
 
-            .footer {{
-                text-align: center;
-                font-size: 8pt; /* Reducido */
-                color: #666666;
-                margin-top: 8pt; /* Reducido */
-            }}
+                .footer {{
+                    text-align: center;
+                    font-size: 8pt; /* Reducido */
+                    color: #666666;
+                    margin-top: 8pt; /* Reducido */
+                }}
 
-            .page-number:before {{
-                content: counter(page);
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1 class="title">Informe de Venta #{venta.cod_ven}</h1>
-            <hr>
-        </div>
+                .page-number:before {{
+                    content: counter(page);
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1 class="title">Informe de Venta #{venta.cod_ven}</h1>
+                <hr>
+            </div>
 
-        <div class="section">
-            <h2>Información General</h2>
-            
-            <table class="info-table">
-                <tr>
-                    <td class="label">Fecha:</td>
-                    <td>{venta.fecha.strftime('%d/%m/%Y')}</td>
-                </tr>
-                <tr>
-                    <td class="label">Cliente:</td>
-                    <td>{venta.nom_cli}</td>
-                </tr>
-                <tr>
-                    <td class="label">Cantidad de Animales:</td>
-                    <td>{venta.cantidad}</td>
-                </tr>
-                <tr>
-                    <td class="label">Precio Total:</td>
-                    <td>${venta.precio_total:,.0f}</td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="section">
-            <h2>Detalles de Animales</h2>
-            
-            <table class="data-table">
-                <thead>
+            <div class="section">
+                <h2>Información General</h2>
+                
+                <table class="info-table">
                     <tr>
-                        <th>Código Animal</th>
-                        <th>Edad</th>
-                        <th>Peso(kg)</th>
-                        <th>Precio Unitario</th>
+                        <td class="label">Código de Venta:</td>
+                        <td>{venta.cod_ven}</td>
                     </tr>
-                </thead>
-                <tbody>
-    """
-    
-    # Añadir filas para cada animal según tu estructura de datos
-    if hasattr(venta, 'detven_set') and venta.detven_set.exists():
-        for detalle in venta.detven_set.all():
-            html += f"""
-                <tr>
-                    <td>{detalle.cod_ani}</td>
-                    <td>{detalle.edad_aniven} años</td>
-                    <td>{detalle.peso_aniven} kg</td>
-                    <td>${detalle.precio_uni:,.0f}</td>
-                </tr>
-            """
-    else:
-        html += """
-                <tr>
-                    <td colspan="4" style="text-align: center;">No hay animales registrados en esta venta.</td>
-                </tr>
+                    <tr>
+                        <td class="label">Fecha:</td>
+                        <td>{venta.fecha.strftime('%d/%m/%Y')}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Cliente:</td>
+                        <td>{venta.nom_cli}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Valor Licencia:</td>
+                        <td>${venta.valor_licenciaVen:,.0f}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Valor Transporte:</td>
+                        <td>${venta.valor_transporteVen:,.0f}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Cantidad de Animales:</td>
+                        <td>{venta.cantidad}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Precio Total:</td>
+                        <td>${venta.precio_total:,.0f}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>Detalles de Animales</h2>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Código Animal</th>
+                            <th>Edad</th>
+                            <th>Peso</th>
+                            <th>Precio Unitario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
         """
-    
-    # Cerrar el HTML
-    html += """
-                </tbody>
-            </table>
-        </div>
+        
+        # Añadir filas para cada animal
+        if detalles.exists():
+            for detalle in detalles:
+                html += f"""
+                    <tr>
+                        <td>{detalle.cod_ani}</td>
+                        <td>{detalle.edad_aniven} años</td>
+                        <td>{detalle.peso_aniven:.1f} kg</td>
+                        <td>${detalle.precio_uni:,.0f}</td>
+                    </tr>
+                """
+        else:
+            html += """
+                    <tr>
+                        <td colspan="4" style="text-align: center; font-style: italic;">
+                            No hay animales registrados en esta venta.
+                        </td>
+                    </tr>
+            """
+        
+        # Cerrar el HTML
+        html += f"""
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="footer">
-            Página <pdf:pagenumber> de <pdf:pagecount>
-        </div>
-    </body>
-    </html>
-    """
-    
-    # Configurar la respuesta HTTP para el PDF
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="venta_{venta_id}.pdf"'
-    
-    # Crear el PDF
-    pisa_status = pisa.CreatePDF(
-        html,
-        dest=response
-    )
-    
-    # Manejar errores
-    if pisa_status.err:
-        return HttpResponse('Error al generar el PDF', status=500)
-    return response
-
+            <div class="footer">
+                <p>Generado el {datetime.now().strftime('%d/%m/%Y a las %H:%M:%S')}</p>
+                Página <pdf:pagenumber> de <pdf:pagecount>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Configurar la respuesta HTTP para el PDF
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="venta_{venta_id}.pdf"'
+        
+        # Crear el PDF
+        pisa_status = pisa.CreatePDF(
+            html,
+            dest=response
+        )
+        
+        # Manejar errores
+        if pisa_status.err:
+            messages.error(request, "Error al generar el PDF.")
+            return redirect('ventas')  # Ajusta el nombre de tu URL de ventas
+            
+        return response
+        
+    except Exception as e:
+        messages.error(request, f"Error al generar el PDF: {str(e)}")
+        return redirect('ventas')  # Ajusta el nombre de tu URL de ventas
+          
 @login_required
 def cancelar_venta(request):
     """Vista para manejar la cancelación del formulario de venta"""
