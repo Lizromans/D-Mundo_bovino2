@@ -641,13 +641,13 @@ def editar_animal(request, cod_ani):
     return redirect('inventario')
 
 @login_required
-def eliminar_animal(request, cod_ani):
+def eliminar_animal(request, animal_id):  # Changed from cod_ani to animal_id
     """Vista para eliminar un animal"""
     if request.method == "POST":
         usuario_id = request.session.get('usuario_id')
         
         try:
-            animal = Animal.objects.get(cod_ani=cod_ani, id_adm=usuario_id)
+            animal = Animal.objects.get(cod_ani=animal_id, id_adm=usuario_id)  # Use animal_id here
             animal.delete()
             messages.success(request, f"Animal eliminado con éxito.")
             

@@ -250,7 +250,7 @@
                                     </div>
                                 </div>
                             {% empty %}
-                                <div class="col-12 text-center">
+                                <div class="col-12 text-center sin-animales">
                                         <i class="fas fa-info-circle me-2"></i>
                                         No hay animales disponibles registrados.
                                 </div>
@@ -294,25 +294,6 @@
                                             <img src="{% static 'img/eliminar.png' %}" alt="eliminar" width="20">
                                         </button>
 
-                                        <!-- Modal de confirmación de cambio de estado -->
-                                        <div id="confirmRestoreModal-{{ animal.cod_ani }}" class="custom-modal">
-                                            <div class="custom-modal-content">
-                                                <div class="custom-modal-header">
-                                                    <h3>Cambiar estado del animal</h3>
-                                                </div>
-                                                <div class="custom-modal-body">
-                                                    <p>¿Estás seguro de cambiar el estado de este animal a "Saludable" (ID: {{ animal.cod_ani }})?</p>
-                                                </div>
-                                                <div class="custom-modal-footer">
-                                                    <button type="button" class="btn-cancelar" onclick="document.getElementById('confirmRestoreModal-{{ animal.cod_ani }}').style.display='none'">Cancelar</button>
-                                                    <form action="{% url 'restaurar_animal' animal.cod_ani %}" method="POST" style="display: inline;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn-confirmar">Cambiar estado</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                         <!-- Modal de confirmación de eliminación -->
                                         <div id="confirmDeleteModal-{{ animal.cod_ani }}" class="custom-modal">
                                             <div class="custom-modal-content">
@@ -334,7 +315,7 @@
                                     </div>
                                 </div>
                             {% empty %}
-                                <div class="col-12 text-center">
+                                <div class="col-12 text-center sin-animales">
                                         <i class="fas fa-info-circle me-2"></i>
                                         No hay animales vendidos registrados.
                                 </div>
