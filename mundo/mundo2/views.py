@@ -2172,7 +2172,7 @@ def editar_venta(request, cod_ven):
             venta.precio_total = nuevo_precio_total + venta.valor_licenciaVen + venta.valor_transporteVen
             venta.save()
             
-            messages.success(request, f'Venta #{cod_ven} actualizada exitosamente.')
+            messages.success(request, f'Venta actualizada exitosamente.')
             return redirect('ventas')
             
         except Exception as e:
