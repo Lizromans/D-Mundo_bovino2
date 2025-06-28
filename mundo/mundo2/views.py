@@ -1889,7 +1889,7 @@ def ventas(request):
         
         # Obtener detalles para cada venta
         for venta in ventas:
-            venta.detalles = DetVen.objects.filter(cod_ven=venta.cod_ven)
+            venta.detalles = DetVen.objects.filter(id_ven=venta)  # Corregido: usar id_ven en lugar de cod_ven
         
              # FORMATEAR EL PESO DE CADA DETALLE DE COMPRA
             for detalle in venta.detalles:
@@ -2027,7 +2027,7 @@ def crear_venta(request):
                 
                 # Crear el detalle de venta
                 DetVen.objects.create(
-                    cod_ven=venta,
+                    id_ven=venta,  # Corregido: usar id_ven en lugar de cod_ven
                     cod_ani=cod_ani,
                     edad_aniven=edad_aniven or 0,
                     peso_aniven=peso_aniven or 0,
@@ -2095,7 +2095,8 @@ def editar_venta(request, cod_ven):
     """
     Vista para editar una venta existente y sus detalles asociados.
     """
-    venta = get_object_or_404(Venta, cod_ven=cod_ven)
+    usuario_id = request.session.get('usuario_id')
+    venta = get_object_or_404(Venta, cod_ven=cod_ven, id_adm=usuario_id)
     
     if request.method == 'POST':
         try:
@@ -2133,7 +2134,7 @@ def editar_venta(request, cod_ven):
                 detalle_id = request.POST.get(f'detalle_id_{i}')
                 
                 # Buscar el detalle por cod_detven
-                detalle = get_object_or_404(DetVen, cod_detven=detalle_id, cod_ven=venta)
+                detalle = get_object_or_404(DetVen, cod_detven=detalle_id, id_ven=venta)  # Corregido: usar id_ven
                 
                 # Actualizar edad del animal
                 detalle.edad_aniven = request.POST.get(f'edad_aniven_{i}')
@@ -2191,7 +2192,7 @@ def eliminar_venta(request, venta_id):
         venta = Venta.objects.get(cod_ven=venta_id, id_adm=usuario_id)
         
         # Primero, eliminar todos los detalles de venta asociados
-        DetVen.objects.filter(cod_ven=venta).delete()
+        DetVen.objects.filter(id_ven=venta).delete()  # Corregido: usar id_ven
         
         # Luego, eliminar la venta principal
         venta.delete()
@@ -2209,13 +2210,14 @@ def eliminar_venta(request, venta_id):
 def venta_pdf(request, venta_id):
     """Vista para generar PDF de una venta específica"""
     try:
+        usuario_id = request.session.get('usuario_id')
         # Obtener la venta - asumiendo que estás pasando cod_ven desde el template
-        venta = Venta.objects.filter(cod_ven=venta_id).order_by('-fecha', '-id_ven').first()
+        venta = Venta.objects.filter(cod_ven=venta_id, id_adm=usuario_id).order_by('-fecha', '-id_ven').first()
         if not venta:
             raise Exception(f"No se encontró ninguna venta con código {venta_id}")
         
-        # Obtener los detalles de la venta
-        detalles = venta.detven_set.all()
+        # Obtener los detalles de la venta usando la relación correcta
+        detalles = DetVen.objects.filter(id_ven=venta)  # Corregido: usar id_ven
         
         # Definir el HTML directamente en el código - solución más sencilla y directa
         html = f"""
@@ -2448,7 +2450,7 @@ def cancelar_venta(request):
     else:
         # Si no es un POST request, redirigir a la página de compras
         return redirect('ventas')
-
+    
 "Vistas para crud de documentos"
 @login_required
 def documento(request):
