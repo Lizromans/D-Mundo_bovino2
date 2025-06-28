@@ -1618,11 +1618,14 @@ def eliminar_compra(request, compra_id):
 def compra_pdf(request, compra_id):
     """Vista para generar PDF de una compra específica"""
     try:
-        # Obtener la compra desde la base de datos
-        compra = get_object_or_404(Compra, cod_com=compra_id)
+        usuario_id = request.session.get('usuario_id')
+        # Obtener la venta - asumiendo que estás pasando cod_ven desde el template
+        compra = Compra.objects.filter(cod_com=compra_id, id_adm=usuario_id).order_by('-fecha', '-id_com').first()
+        if not compra:
+            raise Exception(f"No se encontró ninguna venta con código {compra_id}")
         
-        # Obtener los detalles de la compra
-        detalles = DetCom.objects.filter(id_com=compra.id_com)
+        # Obtener los detalles de la venta usando la relación correcta
+        detalles = DetCom.objects.filter(id_com=compra)  # Corregido: usar id_ven
         
         # Definir el HTML directamente en el código - solución más sencilla y directa
         html = f"""
