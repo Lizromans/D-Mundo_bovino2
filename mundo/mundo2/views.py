@@ -659,7 +659,7 @@ def eliminar_animal(request, animal_id):  # Changed from cod_ani to animal_id
         return redirect('inventario')
     
     return redirect('inventario')
-
+    
 @login_required
 def restaurar_animal(request, cod_ani):
     """Vista para cambiar el estado de un animal vendido a saludable"""
@@ -1242,7 +1242,7 @@ def compras(request):
         
         # Obtener detalles para cada venta
         for compra in compras:
-            compra.detalles = DetCom.objects.filter(cod_com=compra.cod_com)
+            compra.detalles = DetCom.objects.filter(id_com=compra.id_com)
             
             # FORMATEAR EL PESO DE CADA DETALLE DE COMPRA
             for detalle in compra.detalles:
@@ -1393,7 +1393,7 @@ def crear_compra(request):
                 
                 try:
                     DetCom.objects.create(
-                        cod_com=compra,
+                        id_com=compra,
                         cod_ani=cod_ani,
                         edad_aniCom=edad_aniCom,
                         peso_aniCom=peso_aniCom,
@@ -1417,11 +1417,11 @@ def crear_compra(request):
             return redirect('compras')
     else:
         return redirect('compras')
-                  
+
 @login_required
 def editar_compra(request, cod_com):
     """
-    Vista para editar una compra existente
+    Vista para editar una compra existente y sus detalles de animales
     """
     usuario_id = request.session.get('usuario_id')
     
@@ -1435,44 +1435,21 @@ def editar_compra(request, cod_com):
     if request.method == 'POST':
         try:
             with transaction.atomic():
-                # Obtener datos del formulario
+                # Obtener datos del formulario principal
                 fecha = request.POST.get('fecha')
                 nom_prov = request.POST.get('nom_prov')
                 
                 # Validar campos obligatorios
                 if not fecha or not nom_prov:
                     messages.error(request, "La fecha y el nombre del proveedor son obligatorios.")
-                    return redirect('compras')
+                    return redirect('editar_compra', cod_com=cod_com)
                 
-                try:
-                    cantidad = int(request.POST.get('cantidad', 0))
-                    if cantidad <= 0:
-                        messages.error(request, "La cantidad debe ser mayor a 0.")
-                        return redirect('compras')
-                except (ValueError, TypeError):
-                    messages.error(request, "La cantidad debe ser un número válido.")
-                    return redirect('compras')
-                
-                # Formatear correctamente el precio total
-                try:
-                    precio_total_str = request.POST.get('precio_total', '0')
-                    precio_total_str = precio_total_str.replace('.', '')
-                    precio_total_str = precio_total_str.replace(',', '.')
-                    precio_total = float(precio_total_str)
-                    
-                    if precio_total < 0:
-                        messages.error(request, "El precio total no puede ser negativo.")
-                        return redirect('compras')
-                        
-                except (ValueError, TypeError):
-                    messages.error(request, "El precio total debe ser un número válido.")
-                    return redirect('compras')
-                
-                # VALOR LICENCIA - SIEMPRE asignar 0.0 si está vacío (igual que en crear_compra)
+                # Procesar valor licencia
                 valor_licencia_str = request.POST.get('valor_licencia', '').strip()
-                valor_licencia = 0.0  # Valor por defecto
+                valor_licencia = 0.0
                 
-                if valor_licencia_str:  # Si hay algo en el campo
+                if valor_licencia_str:
+                    # Limpiar formato de número (quitar puntos de miles, convertir coma a punto)
                     valor_licencia_str = valor_licencia_str.replace('.', '').replace(',', '.')
                     try:
                         valor_licencia = float(valor_licencia_str)
@@ -1481,11 +1458,12 @@ def editar_compra(request, cod_com):
                     except ValueError:
                         valor_licencia = 0.0
                 
-                # VALOR TRANSPORTE - SIEMPRE asignar 0.0 si está vacío (igual que en crear_compra)
+                # Procesar valor transporte
                 valor_transporte_str = request.POST.get('valor_transporte', '').strip()
-                valor_transporte = 0.0  # Valor por defecto
+                valor_transporte = 0.0
                 
-                if valor_transporte_str:  # Si hay algo en el campo
+                if valor_transporte_str:
+                    # Limpiar formato de número
                     valor_transporte_str = valor_transporte_str.replace('.', '').replace(',', '.')
                     try:
                         valor_transporte = float(valor_transporte_str)
@@ -1494,115 +1472,122 @@ def editar_compra(request, cod_com):
                     except ValueError:
                         valor_transporte = 0.0
                 
-                # Actualizar la compra - NUNCA pasar None, siempre 0.0
+                # Actualizar datos principales de la compra
                 compra.fecha = fecha
                 compra.nom_prov = nom_prov
-                compra.cantidad = cantidad
-                compra.precio_total = precio_total
-                compra.valor_licenciaCom = valor_licencia  # Siempre será 0.0 o mayor
-                compra.valor_transporteCom = valor_transporte  # Siempre será 0.0 o mayor
+                compra.valor_licenciaCom = valor_licencia
+                compra.valor_transporteCom = valor_transporte
+                
+                # EDITAR DETALLES DE ANIMALES EXISTENTES
+                detalles_actuales = DetCom.objects.filter(id_com=compra.id_com).order_by('cod_detcom')
+                num_detalles = int(request.POST.get('num_detalles', 0))
+                
+                errores_detalles = []
+                detalles_procesados = 0
+                precio_total_animales = 0.0
+                
+                # Procesar cada detalle existente
+                for i in range(num_detalles):
+                    try:
+                        # Obtener el detalle actual
+                        if i < len(detalles_actuales):
+                            detalle = detalles_actuales[i]
+                            
+                            # Obtener datos del formulario para este detalle
+                            edad_anicom = request.POST.get(f'edad_aniCom_{i}', '').strip()
+                            peso_ani_str = request.POST.get(f'peso_anicom_{i}', '').strip()
+                            precio_uni_str = request.POST.get(f'precio_uni_{i}', '0').strip()
+                            
+                            # Validar y procesar edad
+                            if not edad_anicom:
+                                edad_anicom = "No especificada"
+                            
+                            # Validar y procesar peso
+                            peso_aniCom = Decimal('0')
+                            if peso_ani_str:
+                                try:
+                                    # Normalizar peso (convertir coma a punto)
+                                    peso_normalizado = peso_ani_str.replace(',', '.')
+                                    peso_aniCom = Decimal(peso_normalizado)
+                                    if peso_aniCom < 0:
+                                        errores_detalles.append(f"Animal {i+1}: El peso no puede ser negativo.")
+                                        peso_aniCom = Decimal('0')
+                                except (ValueError, InvalidOperation):
+                                    errores_detalles.append(f"Animal {i+1}: Formato de peso inválido.")
+                                    peso_aniCom = Decimal('0')
+                            
+                            # Validar y procesar precio unitario
+                            try:
+                                if precio_uni_str:
+                                    # Limpiar formato de precio
+                                    precio_uni_str = precio_uni_str.replace('.', '').replace(',', '.')
+                                    precio_uni = float(precio_uni_str)
+                                    if precio_uni < 0:
+                                        errores_detalles.append(f"Animal {i+1}: El precio no puede ser negativo.")
+                                        precio_uni = 0.0
+                                else:
+                                    precio_uni = 0.0
+                            except (ValueError, TypeError):
+                                errores_detalles.append(f"Animal {i+1}: Formato de precio inválido.")
+                                precio_uni = 0.0
+                            
+                            # Actualizar el detalle
+                            detalle.edad_aniCom = edad_anicom
+                            detalle.peso_aniCom = peso_aniCom
+                            detalle.precio_uni = precio_uni
+                            detalle.save()
+                            
+                            precio_total_animales += precio_uni
+                            detalles_procesados += 1
+                            
+                    except Exception as e:
+                        errores_detalles.append(f"Animal {i+1}: Error al actualizar - {str(e)}")
+                
+                # Calcular precio total final
+                precio_total_final = precio_total_animales + valor_licencia + valor_transporte
+                
+                # Actualizar cantidad y precio total en la compra
+                compra.cantidad = num_detalles
+                compra.precio_total = precio_total_final
                 compra.save()
                 
-                # Eliminar detalles existentes
-                DetCom.objects.filter(cod_com=compra).delete()
-                
-                # Crear nuevos detalles
-                detalles_creados = 0
-                errores_detalles = []
-                
-                for i in range(1, cantidad + 1):
-                    cod_ani = request.POST.get(f'cod_ani_{i}')
-                    edad_anicom = request.POST.get(f'edad_aniCom_{i}')
-                    peso_ani = request.POST.get(f'peso_ani_{i}')
-                    precio_uni_str = request.POST.get(f'precio_uni_{i}', '0')
+                # Construir mensaje de resultado
+                if errores_detalles:
+                    mensaje_exito = f"Compra actualizada. Se procesaron {detalles_procesados} de {num_detalles} animales."
+                    mensaje_errores = "Errores: " + "; ".join(errores_detalles[:3])
+                    if len(errores_detalles) > 3:
+                        mensaje_errores += f" y {len(errores_detalles) - 3} más."
                     
-                    if not cod_ani:
-                        errores_detalles.append(f"Animal {i}: Código requerido.")
-                        continue
-                    
-                    try:
-                        animal = Animal.objects.get(cod_ani=cod_ani, id_adm=usuario_id)
-                    except Animal.DoesNotExist:
-                        errores_detalles.append(f"Animal {i}: Código {cod_ani} no válido.")
-                        continue
-                    
-                    try:
-                        precio_uni_str = precio_uni_str.replace('.', '')
-                        precio_uni_str = precio_uni_str.replace(',', '.')
-                        precio_uni = float(precio_uni_str)
-                        if precio_uni < 0:
-                            errores_detalles.append(f"Animal {i}: Precio no puede ser negativo.")
-                            continue
-                    except (ValueError, TypeError):
-                        errores_detalles.append(f"Animal {i}: Precio inválido.")
-                        continue
-                    
-                    try:
-                        edad_anicom = int(edad_anicom) if edad_anicom else 0
-                        if edad_anicom < 0:
-                            edad_anicom = 0
-                    except (ValueError, TypeError):
-                        edad_anicom = 0
-                    
-                    try:
-                        peso_ani = float(peso_ani.replace(',', '.')) if peso_ani else 0
-                        if peso_ani < 0:
-                            peso_ani = 0
-                    except (ValueError, TypeError):
-                        peso_ani = 0
-                    
-                    try:
-                        DetCom.objects.create(
-                            cod_com=compra,
-                            cod_ani=cod_ani,
-                            edad_anicom=edad_anicom,
-                            peso_anicom=peso_ani,
-                            precio_uni=precio_uni
-                        )
-                        detalles_creados += 1
-                    except Exception as e:
-                        errores_detalles.append(f"Animal {i}: Error al actualizar.")
-                
-                # Mensaje de éxito actualizado
-                mensaje_base = ""
-                if detalles_creados == 0:
-                    mensaje_base = "No se pudo actualizar ningún detalle válido."
-                elif errores_detalles:
-                    mensaje_base = f"Compra actualizada. Se procesaron {detalles_creados} de {cantidad} animales."
-                    if len(errores_detalles) <= 2:
-                        mensaje_base += " Errores: " + "; ".join(errores_detalles)
+                    messages.success(request, mensaje_exito)
+                    messages.warning(request, mensaje_errores)
                 else:
-                    mensaje_base = "Compra actualizada exitosamente"
-                
-                # Mostrar valores adicionales solo si son mayor a 0
-                valores_actualizados = []
-                if valor_licencia > 0:
-                    valores_actualizados.append(f"licencia: ${valor_licencia:,.2f}")
-                if valor_transporte > 0:
-                    valores_actualizados.append(f"transporte: ${valor_transporte:,.2f}")
-                
-                if valores_actualizados and detalles_creados > 0:
-                    mensaje_base += f" (incluye {', '.join(valores_actualizados)})"
-                elif valores_actualizados:
-                    mensaje_base += f". Valores incluidos: {', '.join(valores_actualizados)}"
-                
-                # Mostrar el mensaje apropiado
-                if detalles_creados == 0:
-                    messages.error(request, mensaje_base)
-                elif errores_detalles:
-                    messages.warning(request, mensaje_base)
-                else:
-                    messages.success(request, mensaje_base + ".")
+                    messages.success(request, f"Compra actualizada exitosamente. {detalles_procesados} animales procesados.")
                 
                 return redirect('compras')
                 
         except Exception as e:
             messages.error(request, f"Error al actualizar la compra: {str(e)}")
-            return redirect('compras')
+            return redirect('editar_compra', cod_com=cod_com)
     
     else:
-        return redirect('compras')
-           
+        # Método GET - mostrar formulario con datos actuales
+        try:
+            detalles = DetCom.objects.filter(id_com=compra.id_com).order_by('cod_detcom')
+            animales_disponibles = Animal.objects.filter(id_adm=usuario_id).order_by('cod_ani')
+            
+            context = {
+                'compra': compra,
+                'detalles': detalles,
+                'animales_disponibles': animales_disponibles,
+                'es_edicion': True
+            }
+            
+            return render(request, 'compras/editar_compra.html', context)
+            
+        except Exception as e:
+            messages.error(request, f"Error al cargar los datos de la compra: {str(e)}")
+            return redirect('compras')
+                                    
 @login_required
 def eliminar_compra(request, compra_id):
     """Vista para eliminar una compra y sus detalles"""
@@ -1615,7 +1600,7 @@ def eliminar_compra(request, compra_id):
             compra = Compra.objects.select_for_update().get(cod_com=compra_id, id_adm=usuario_id)
             
             # Primero, eliminar todos los detalles de compra asociados
-            detalles_eliminados = DetCom.objects.filter(cod_com=compra).delete()[0]
+            detalles_eliminados = DetCom.objects.filter(id_com=compra.id_com).delete()[0]
             
             # Luego, eliminar la compra principal
             compra.delete()
@@ -1637,7 +1622,7 @@ def compra_pdf(request, compra_id):
         compra = get_object_or_404(Compra, cod_com=compra_id)
         
         # Obtener los detalles de la compra
-        detalles = DetCom.objects.filter(cod_com=compra)
+        detalles = DetCom.objects.filter(id_com=compra.id_com)
         
         # Definir el HTML directamente en el código - solución más sencilla y directa
         html = f"""
@@ -1875,7 +1860,7 @@ def cancelar_compra(request):
     else:
         # Si no es un POST request, redirigir a la página de compras
         return redirect('compras')
-
+    
 "Vistas para crud de ventas"
 @login_required
 def ventas(request):

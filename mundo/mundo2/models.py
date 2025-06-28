@@ -163,7 +163,7 @@ class Contacto(models.Model):
 
 class DetCom(models.Model):
     cod_detcom = models.IntegerField(primary_key=True)
-    cod_com= models.ForeignKey('Compra', models.DO_NOTHING, db_column='cod_com')
+    id_com= models.ForeignKey('Compra', models.DO_NOTHING, db_column='id_com')
     cod_ani = models.IntegerField(255)
     edad_aniCom = models.CharField(max_length=255, null=True, blank=True, db_column='edad_aniCom')
     peso_aniCom = models.DecimalField(
@@ -182,7 +182,7 @@ class DetCom(models.Model):
 
 class DetVen(models.Model):
     cod_detven = models.AutoField(primary_key=True)
-    cod_ven = models.ForeignKey('Venta', models.DO_NOTHING, db_column='cod_ven')
+    id_ven = models.ForeignKey('Venta', models.DO_NOTHING, db_column='id_ven')
     cod_ani = models.IntegerField(255)
     edad_aniven = models.CharField(max_length=255, null=True, blank=True, db_column='edad_aniven')
     peso_aniven= models.DecimalField(

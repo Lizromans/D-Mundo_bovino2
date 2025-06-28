@@ -12,19 +12,19 @@ class AnimalAdmin(admin.ModelAdmin):
 admin.site.register(Animal, AnimalAdmin)
 
 class DetComAdmin(admin.ModelAdmin):
-    list_display = ("cod_detcom", "cod_com", "peso_aniCom","edad_aniCom", "precio_uni")
+    list_display = ("cod_detcom", "id_com", "peso_aniCom","edad_aniCom", "precio_uni")
 admin.site.register(DetCom, DetComAdmin)
 
 class CompraAdmin(admin.ModelAdmin):
-    list_display = ("cod_com","nom_prov", "cantidad", "fecha", "precio_total", "id_adm")
+    list_display = ("id_com","cod_com","nom_prov", "cantidad", "fecha", "precio_total", "id_adm")
 admin.site.register(Compra, CompraAdmin)
 
 class DetVenAdmin(admin.ModelAdmin):
-    list_display = ("cod_detven", "cod_ven", "peso_aniven", "precio_uni")
+    list_display = ("cod_detven", "id_ven", "peso_aniven", "precio_uni")
 admin.site.register(DetVen, DetVenAdmin)
 
 class VentaAdmin(admin.ModelAdmin):
-    list_display = ("cod_ven", "nom_cli","cantidad", "fecha", "precio_total", "id_adm")
+    list_display = ("id_ven","cod_ven", "nom_cli","cantidad", "fecha", "precio_total", "id_adm")
 admin.site.register(Venta, VentaAdmin)
 
 class AgendaAdmin(admin.ModelAdmin):
