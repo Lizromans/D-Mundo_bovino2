@@ -171,7 +171,7 @@ button {
 
 /* Estilos para las fichas de contactos */
 .fichas-container {
-    margin-bottom: 12.3%;
+    margin-top: -3%;
 }
 
 .fichas {
@@ -184,9 +184,9 @@ button {
 
 /* Contenedor de la imagen */
 .contacto-img {
-    margin-top: -40px;
+    margin-top: -3px;
     text-align: center;
-    margin-bottom: -28px;
+    margin-bottom: -5px;
 }
 
 .contacto-img img {
@@ -437,7 +437,7 @@ button {
     }
 
     .fichas-container {
-    margin-bottom: 13.6%;
+    margin-bottom: 12.3%;
     }
 }
 
