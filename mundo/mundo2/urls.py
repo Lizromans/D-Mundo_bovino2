@@ -52,6 +52,7 @@ urlpatterns = [
     path('eliminar-contacto/<int:id_cont>/', views.eliminar_contacto, name='eliminar_contacto'),
     path('cancelar_contacto/', views.cancelar_contacto, name='cancelar_contacto'),
     path('formulario_soporte/', views.formulario_soporte, name='formulario_soporte'),
+    path('guardar_campo/', views.guardar_campo, name='guardar_campo'),
     ]
 
 if settings.DEBUG:

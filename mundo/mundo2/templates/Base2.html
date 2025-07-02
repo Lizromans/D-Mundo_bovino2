@@ -272,7 +272,14 @@
                             <img src="{% static 'img/icons7.png' %}" alt="Configuraciones" style="margin-left: 3px;">
                         </a>
                     </div>
-                    <span class="icon-search"><img src="{% static 'img/usuario.png'%}" alt="usuario" id="icono"></span>
+                    <span class="icon-search">
+                        {% if request.session.imagen_perfil %}
+                            <img src="{% static 'img/' %}{{ request.session.imagen_perfil }}.png" alt="usuario" id="icono">
+                        {% else %}
+                            <!-- Imagen por defecto si no hay imagen asignada -->
+                            <img src="{% static 'img/01.png' %}" alt="usuario" id="icono">
+                        {% endif %}
+                    </span>
                 </li>
             </ul>
         </header>
@@ -297,5 +304,6 @@
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/notificaciones.js' %}"></script>
     <script src="{% static 'js/modulos.js' %}"></script>
+    <script src="{% static 'js/fotosPerfil.js' %}"></script>
 </body>
 </html>

@@ -187,14 +187,14 @@ button {
 
 /* Contenedor de la imagen */
 .compra-img {
-    margin-top: -40px;
+    margin-top: -80px;
     text-align: center;
-    margin-bottom: -28px;
+    margin-bottom: -98px;
     
 }
 
 .compra-img img {
-    max-width: 100px;
+    max-width: 165px;
     height: auto;
 }
 

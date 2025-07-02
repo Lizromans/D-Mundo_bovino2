@@ -41,7 +41,14 @@ if ('serviceWorker' in navigator) {
                             <img src="{% static 'img/icons6.png' %}" alt="Cerrar sesión" style="margin-left: 8px;">
                         </a>
                     </div>
-                    <span class="icon-search"><img src="{% static 'img/usuario.png'%}" alt="usuario" id="icono"></span>
+                    <span class="icon-search">
+                        {% if request.session.imagen_perfil %}
+                            <img src="{% static 'img/' %}{{ request.session.imagen_perfil }}.png" alt="usuario" id="icono">
+                        {% else %}
+                            <!-- Imagen por defecto si no hay imagen asignada -->
+                            <img src="{% static 'img/01.png' %}" alt="usuario" id="icono">
+                        {% endif %}
+                    </span>
                 </li>
             </ul>
         </header>
@@ -71,6 +78,7 @@ if ('serviceWorker' in navigator) {
 
     <!-- JavaScript de Bootstrap y dependencias -->
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/fotosPerfil.js' %}"></script>
 
 </body>
 </html>

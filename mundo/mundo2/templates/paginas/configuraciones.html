@@ -21,8 +21,19 @@
     <!-- Avatar fuera del contenedor principal (foto predeterminada) -->
     <div class="avatar-section">
         <div class="avatar-circle">
-            <span class="avatar"><img src="{% static 'img/usuario2.png'%}" alt="usuario"></span>
+            <span class="avatar">
+                {% if request.session.imagen_perfil %}
+                    <img src="{% static 'img/' %}{{ request.session.imagen_perfil }}.png">
+                {% else %}
+                    <!-- Imagen por defecto si no hay imagen asignada -->
+                    <img 
+                    src="{% static 'img/01.png' %}">
+                {% endif %}
+            </span>
             <!-- Eliminamos el camera-icon ya que no permitiremos cambiar la foto -->
+            <button type="button" class="btn-perfil" data-bs-toggle="modal" data-bs-target="#foto_perfil">
+                <img src="{% static 'img/editar.png' %}" alt="editar" width="20">
+            </button>
         </div>
     </div>
 
@@ -117,6 +128,24 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="foto_perfil" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4>Fotos de Perfil</h4>
+                </div>
+                <div class="modal-body">     
+                    <img src="{% static 'img/01.png' %}" class="avatar-option" onclick="">
+                    <img src="{% static 'img/02.png' %}" class="avatar-option" onclick="">
+                    <img src="{% static 'img/03.png' %}" class="avatar-option" onclick="">
+                    <img src="{% static 'img/04.png' %}" class="avatar-option" onclick="">
+                    <img src="{% static 'img/05.png' %}" class="avatar-option" onclick="">
+                    <img src="{% static 'img/06.png' %}" class="avatar-option" onclick="">
+                </div>
+            </div>
+        </div>
+    </div>
 <script src="{% static 'js/mensajes.js' %}"></script>
 <script src="{% static 'js/modulos.js' %}"></script>
+<script src="{% static 'js/fotosPerfil.js' %}"></script>
 {% endblock %}

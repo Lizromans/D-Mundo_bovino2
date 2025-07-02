@@ -25,8 +25,13 @@ from xhtml2pdf import pisa
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+
+import json
+
 
 
 # Create your views here.
@@ -381,6 +386,70 @@ def configuraciones(request):
     except Exception as e:
         messages.error(request, f"Error al cargar la configuración: {str(e)}")
         return redirect('home')
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def guardar_campo(request):
+    """
+    Vista para guardar la foto de perfil en la tabla administrador.
+    """
+    try:
+        
+        # Obtener datos del request
+        data = json.loads(request.body)
+        campo = data.get('campo')
+        valor = data.get('valor')
+        
+        
+        # Verificar que es el campo imagen_perfil
+        if campo != 'imagen_perfil':
+            return JsonResponse({
+                'success': False, 
+                'error': 'Campo no soportado'
+            })
+        
+        # Obtener el ID del administrador desde la sesión
+        usuario_id = request.session.get('usuario_id')  # Basado en tu campo id_adm
+        if not usuario_id:
+            return JsonResponse({
+                'success': False, 
+                'error': 'ID de administrador no encontrado en sesión'
+            })
+        
+        try:
+            # Buscar el administrador en la base de datos
+            admin = Administrador.objects.get(id_adm=usuario_id)
+            
+            # Actualizar el campo imagen_perfil
+            admin.imagen_perfil = valor
+            admin.save()
+            
+            # Actualizar la sesión con la nueva imagen
+            request.session['imagen_perfil'] = valor
+            request.session.modified = True
+            
+            return JsonResponse({
+                'success': True, 
+                'message': 'Imagen de perfil guardada correctamente'
+            })
+            
+        except Administrador.DoesNotExist:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Administrador no encontrado en la base de datos'
+            })
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False, 
+            'error': 'Datos JSON inválidos'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'error': f'Error: {str(e)}'
+        })
 
 @login_required
 def privacidad(request):
