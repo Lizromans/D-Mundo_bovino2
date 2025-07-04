@@ -19,7 +19,6 @@ urlpatterns = [
     path('privacidad/', views.privacidad, name='privacidad'),
     path('inventario/', views.inventario, name='inventario'),    
     path('registrar_animal/', views.registrar_animal, name='registrar_animal'),
-    path('restaurar-animal/<str:cod_ani>/', views.restaurar_animal, name='restaurar_animal'),
     path('eliminar-animal/<int:animal_id>/', views.eliminar_animal, name='eliminar_animal'),
     path('editar-animal/<int:cod_ani>/', views.editar_animal, name='editar_animal'),
     path('cancelar_animal/', views.cancelar_animal, name='cancelar_animal'), 

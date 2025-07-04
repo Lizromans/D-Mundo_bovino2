@@ -79,7 +79,7 @@
     width: 175px;
     height: 175px;
     border-radius: 50%;
-    background-color: #e5e5e5;
+    background-color: transparent;
     position: relative;
     display: flex;
     justify-content: center;
@@ -117,8 +117,12 @@
 .avatar-option{
     width: 30%;
     height: 30%;
+    cursor: pointer;
 }
 
+#foto_perfil{
+    margin-top: -8%;
+}
 #nombreUsuario, #email{
     color: #333333b0;
 }
@@ -138,7 +142,7 @@
 
 /* Sección del formulario */
 .form-section {
-    padding: 15px 15px 15px 120px; /* Aumentado el padding izquierdo para dar espacio al avatar */
+    padding: 15px 15px 15px 98px; /* Aumentado el padding izquierdo para dar espacio al avatar */
     display: grid;
     grid-template-columns: 1fr 1fr; /* Divide en dos columnas iguales */
     gap: 20px; /* Espacio entre los elementos */
@@ -188,7 +192,7 @@
     font-weight: 500; 
     font-size: 20px;
     color: #333;
-    margin-left: 13%;   
+    margin-left: 5%;   
 }
 
 .modulos-grid {

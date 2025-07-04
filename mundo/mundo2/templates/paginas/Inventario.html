@@ -273,7 +273,7 @@
                                         <!-- ID y Fecha debajo de la imagen -->
                                         <div class="info-principal">
                                             <p><b>ID Animal:</b> {{ animal.cod_ani }}</p>
-                                            <p><b>Fecha de Venta:</b> {{ venta.fecha|date:"d/m/Y" }}</p>
+                                            <p><b>Fecha de Venta:</b> {{ animal.fecha_venta|date:"d/m/Y"|default:"No disponible" }}</p>
                                         </div>
                                         
                                         <!-- Información adicional en dos columnas -->

@@ -22,6 +22,7 @@ class Administrador(models.Model):
     confcontraseña = models.CharField(max_length=128)
     last_login = models.DateTimeField(null=True, blank=True)
     imagen_perfil = models.IntegerField()
+    
     class Meta:
         managed = False
         db_table = 'administrador'

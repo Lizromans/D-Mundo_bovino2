@@ -10,17 +10,7 @@
     <link href="{% static 'css/base3.css' %}" rel="stylesheet">
     {% block css %}{% endblock %}
 </head>
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/static/sw.js')
-        .then(function(registration) {
-            console.log('Service Worker registrado');
-        })
-        .catch(function(error) {
-            console.log('Error al registrar Service Worker:', error);
-        });
-}
-</script>
+
 <body>
     {% block contenido %}{% endblock %}
     <div class="home"> 
@@ -46,7 +36,7 @@ if ('serviceWorker' in navigator) {
                             <img src="{% static 'img/' %}{{ request.session.imagen_perfil }}.png" alt="usuario" id="icono">
                         {% else %}
                             <!-- Imagen por defecto si no hay imagen asignada -->
-                            <img src="{% static 'img/01.png' %}" alt="usuario" id="icono">
+                            <img src="{% static 'img/07.png' %}" alt="usuario" id="icono">
                         {% endif %}
                     </span>
                 </li>

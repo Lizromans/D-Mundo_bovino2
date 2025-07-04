@@ -186,15 +186,15 @@ button {
 }
 
 /* Contenedor de la imagen */
-.compra-img {
+.venta-img {
     margin-top: -80px;
     text-align: center;
-    margin-bottom: -98px;
+    margin-bottom: -85px;
     
 }
 
-.compra-img img {
-    max-width: 165px;
+.venta-img img {
+    max-width: 150px;
     height: auto;
 }
 

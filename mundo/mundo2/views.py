@@ -29,10 +29,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-
 import json
-
-
 
 # Create your views here.
 def bienvenido(request):
@@ -387,7 +384,6 @@ def configuraciones(request):
         messages.error(request, f"Error al cargar la configuración: {str(e)}")
         return redirect('home')
 
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def guardar_campo(request):
@@ -572,6 +568,15 @@ def inventario(request):
     animales_disponibles = formatear_peso_animales(animales_disponibles)
     animales_vendidos = formatear_peso_animales(animales_vendidos)
 
+
+    # Para animales vendidos, agregar fecha de venta
+    for animal in animales_vendidos:
+        detalle_venta = DetVen.objects.filter(cod_ani=animal.cod_ani).select_related('id_ven').first()
+        if detalle_venta:
+            animal.fecha_venta = detalle_venta.id_ven.fecha
+        else:
+            animal.fecha_venta = None
+        
     # Determinar el siguiente código de animal para este administrador
     proximo_codigo = 1
     ultimo_animal = Animal.objects.filter(id_adm=usuario_id).order_by('-cod_ani').first()
@@ -724,27 +729,6 @@ def eliminar_animal(request, animal_id):  # Changed from cod_ani to animal_id
             messages.error(request, "Error: No se pudo encontrar el animal.")
         except Exception as e:
             messages.error(request, f"Error al eliminar el animal: {str(e)}")
-        
-        return redirect('inventario')
-    
-    return redirect('inventario')
-    
-@login_required
-def restaurar_animal(request, cod_ani):
-    """Vista para cambiar el estado de un animal vendido a saludable"""
-    if request.method == "POST":
-        usuario_id = request.session.get('usuario_id')
-        
-        try:
-            animal = Animal.objects.get(cod_ani=cod_ani, id_adm=usuario_id)
-            animal.estado = "Saludable"
-            animal.save()
-            messages.success(request, f"Estado del animal {cod_ani} cambiado a 'Saludable'.")
-            
-        except Animal.DoesNotExist:
-            messages.error(request, "Error: No se pudo encontrar el animal.")
-        except Exception as e:
-            messages.error(request, f"Error al cambiar el estado del animal: {str(e)}")
         
         return redirect('inventario')
     
@@ -2031,8 +2015,12 @@ def crear_venta(request):
             if ultima_venta:
                 siguiente_cod_ven = ultima_venta.cod_ven + 1
             
+            # Estados válidos para venta (debe coincidir con la API)
+            estados_validos = ['Saludable', 'En reposo', 'En crecimiento']
+            
             # Validar que todos los animales seleccionados estén disponibles
             codigos_animales_usados = []
+            
             for i in range(1, cantidad + 1):
                 cod_ani = request.POST.get(f'cod_ani_{i}', '')
                 
@@ -2040,12 +2028,12 @@ def crear_venta(request):
                     messages.error(request, f"Debe seleccionar un animal para la posición {i}")
                     return redirect('ventas')
                 
-                # Verificar que el animal existe y está disponible (saludable)
+                # Verificar que el animal existe y está disponible (con estados válidos)
                 try:
                     animal = Animal.objects.get(
                         cod_ani=cod_ani, 
                         id_adm=usuario_id,
-                        estado='saludable'  # Ajusta según tu campo de estado
+                        estado__in=estados_validos  # Usar los mismos estados que la API
                     )
                 except Animal.DoesNotExist:
                     messages.error(request, f"El animal con código {cod_ani} no está disponible o no existe")
@@ -2106,10 +2094,10 @@ def crear_venta(request):
                     precio_uni=precio_uni,
                 )
                 
-                # Opcional: Cambiar el estado del animal a 'vendido'
+                # Cambiar el estado del animal a 'vendido'
                 try:
                     animal = Animal.objects.get(cod_ani=cod_ani, id_adm=usuario_id)
-                    animal.estado = 'vendido'  # Ajusta según tu modelo
+                    animal.estado = 'Vendido'  # Ajusta según tu modelo
                     animal.save()
                 except Animal.DoesNotExist:
                     pass  # El animal ya fue validado anteriormente
@@ -2126,8 +2114,8 @@ def crear_venta(request):
 @login_required
 def api_animales_disponibles(request):
     """
-    API para obtener los códigos de animales disponibles con estado saludable
-    para el administrador actual.
+    API para obtener los códigos de animales disponibles con estado saludable,
+    en reposo y en crecimiento para el administrador actual.
     """
     if request.method != 'GET':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
@@ -2139,11 +2127,15 @@ def api_animales_disponibles(request):
         if not usuario_id:
             return JsonResponse({'error': 'Usuario no autenticado'}, status=401)
         
-        # Obtener animales disponibles (estado saludable) del administrador actual
-        # Ajusta el nombre del modelo y campos según tu estructura
+        # Estados válidos para venta (debe coincidir con la validación en crear_venta)
+        # CORREGIDO: Usar mayúsculas para coincidir con crear_venta
+        estados_validos = ['Saludable', 'En reposo', 'En crecimiento']
+        
+        # Obtener animales disponibles con múltiples estados del administrador actual
+        # Usando __in para filtrar por múltiples estados
         animales_disponibles = Animal.objects.filter(
             id_adm=usuario_id,
-            estado='saludable'  # Ajusta el campo y valor según tu modelo
+            estado__in=estados_validos  # Usar los mismos estados que en crear_venta
         ).values('cod_ani', 'raza', 'peso', 'edad').order_by('cod_ani')
         
         # Convertir QuerySet a lista
@@ -2160,7 +2152,7 @@ def api_animales_disponibles(request):
             'success': False,
             'error': f'Error al obtener animales disponibles: {str(e)}'
         }, status=500)
-     
+          
 @login_required
 @transaction.atomic
 def editar_venta(request, cod_ven):
