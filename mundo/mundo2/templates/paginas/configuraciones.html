@@ -26,11 +26,10 @@
                     <img src="{% static 'img/' %}{{ request.session.imagen_perfil }}.png">
                 {% else %}
                     <!-- Imagen por defecto si no hay imagen asignada -->
-                    <img 
-                    src="{% static 'img/07.png' %}">
+                    <img src="{% static 'img/07.png' %}">
                 {% endif %}
             </span>
-            <!-- Eliminamos el camera-icon ya que no permitiremos cambiar la foto -->
+
             <button type="button" class="btn-perfil" data-bs-toggle="modal" data-bs-target="#foto_perfil">
                 <img src="{% static 'img/editar.png' %}" alt="editar" width="20">
             </button>
@@ -133,6 +132,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4>Fotos de Perfil</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">&times;</button>
                 </div>
                 <div class="modal-body">     
                     <img src="{% static 'img/01.png' %}" class="avatar-option" onclick="">

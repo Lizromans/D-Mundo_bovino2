@@ -4,10 +4,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const avatarOptions = document.querySelectorAll('.avatar-option');
     const modalFotoPerfil = document.getElementById('foto_perfil');
 
+    // Función para marcar la foto actualmente seleccionada
+    function marcarFotoSeleccionada() {
+        const currentImageSrc = avatarImg.src;
+        const currentImageName = currentImageSrc.split('/').pop();
+        
+        // Remover clase 'selected' de todas las opciones
+        avatarOptions.forEach(option => {
+            option.classList.remove('selected');
+        });
+        
+        // Agregar clase 'selected' a la opción actual
+        avatarOptions.forEach(option => {
+            const optionImageName = option.src.split('/').pop();
+            if (optionImageName === currentImageName) {
+                option.classList.add('selected');
+            }
+        });
+    }
+
     // Función para cambiar la imagen del avatar
     function cambiarImagenAvatar(imageSrc, nombreImagen) {
         // Cambiar la imagen en el avatar principal
         avatarImg.src = imageSrc;
+        
+        // Actualizar la selección visual inmediatamente
+        marcarFotoSeleccionada();
         
         // Extraer solo el nombre del archivo para guardar
         const numeroImagen = nombreImagen.split('/').pop().replace('.png', '');
@@ -82,6 +104,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // Marcar la foto seleccionada cuando se abre el modal
+    modalFotoPerfil.addEventListener('show.bs.modal', function () {
+        marcarFotoSeleccionada();
+    });
+
+    // Marcar la foto seleccionada al cargar la página
+    marcarFotoSeleccionada();
+
     // Opcional: Función para renderizar imágenes dinámicamente si las cargas desde el servidor
     function renderAvatarOptions(images, containerId) {
         const container = document.getElementById(containerId);
@@ -103,10 +133,4 @@ document.addEventListener("DOMContentLoaded", () => {
             container.appendChild(img);
         });
     }
-
-    // Si necesitas cargar las imágenes dinámicamente, descomenta y ajusta esto:
-    /*
-    const imagenesDisponibles = ['01.png', '02.png', '03.png', '04.png', '05.png', '06.png'];
-    renderAvatarOptions(imagenesDisponibles, 'avatar-options-container');
-    */
 });
