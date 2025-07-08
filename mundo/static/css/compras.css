@@ -188,10 +188,6 @@ button {
 }
 
 /* Estilos para las fichas */
-.fichas-container {
-    margin-bottom: 5.9%;
-}
-
 .fichas {
     background-color: #f9f9f9b7;
     border-radius: 10px;
@@ -545,7 +541,7 @@ button {
     margin-bottom: 22.8%;
     }
     .fichas-container {
-    margin-bottom: 5.1%;
+    margin-bottom: 6.5%;
     }
 }
 
