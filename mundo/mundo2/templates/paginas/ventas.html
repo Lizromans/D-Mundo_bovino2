@@ -23,7 +23,7 @@
     <div class="container">
         <div class="row mb-4">
             <div class="col-md-10 offset-md-1">
-                <form class="navbar-form" role="search" method="GET" action="{% url 'compras' %}">
+                <form class="navbar-form" role="search" method="GET" action="{% url 'ventas' %}">
                     <div class="form-group d-flex justify-content-end">
                         <!-- Campo de búsqueda movido a la derecha -->
                         <div class="search-container mr-2">
@@ -35,7 +35,7 @@
 
                         <!-- Botón agregar junto a la barra de búsqueda -->
                         <div class="boton-seccion ml-2">
-                            <button type="button" class="btn-guardar" data-bs-toggle="modal" data-bs-target="#compraModal">
+                            <button type="button" class="btn-guardar" data-bs-toggle="modal" data-bs-target="#ventaModal">
                                 <img src="{% static 'img/agregar.png' %}" class="agregar" alt="agregar">
                             </button>
                         </div>
@@ -52,18 +52,18 @@
                         <!-- Badge para el término de búsqueda -->
                         <span class="badge busqueda-badge">
                             Búsqueda: {{ busqueda }}
-                            <a href="{% url 'compras' %}" class="text-white ms-1 close-icon">×</a>
+                            <a href="{% url 'ventas' %}" class="text-white ms-1 close-icon">×</a>
                         </span>
                         
                         <!-- Badge para el tipo de búsqueda -->
                         {% if tipo_busqueda == "proveedor" %}
                             <span class="badge tipo-badge">Tipo: Nombre proveedor</span>
                         {% elif tipo_busqueda == "fecha" %}
-                            <span class="badge tipo-badge">Tipo: Fecha de compra</span>
+                            <span class="badge tipo-badge">Tipo: Fecha de venta</span>
                         {% endif %}
                         
                         {% if busqueda %}
-                            <a href="{% url 'compras' %}" class="btn btn-sm btn-outline-secondary">Limpiar</a>
+                            <a href="{% url 'ventas' %}" class="btn btn-sm btn-outline-secondary">Limpiar</a>
                         {% endif %}
                     </div>
                 </div>
@@ -90,7 +90,7 @@
                             <a href="#" data-bs-toggle="modal" class="btn-ver" data-bs-target="#detalleVentaModal-{{ venta.cod_ven }}">Ver detalle</a>
                         </div>
 
-                         <!-- Botón para editar compra -->
+                         <!-- Botón para editar venta -->
                         <button type="button" class="btn-editar" data-bs-toggle="modal" data-bs-target="#editModal-{{ venta.cod_ven }}">
                             <img src="{% static 'img/editar.png' %}" alt="editar" width="20">
                         </button>
@@ -122,7 +122,7 @@
                             </div>
                         </div>
 
-                        <!-- Modal para editar compra -->
+                        <!-- Modal para editar venta -->
                         <div class="modal fade" id="editModal-{{ venta.cod_ven }}" tabindex="-1" aria-labelledby="editModalLabel-{{ venta.cod_ven }}" aria-hidden="true">
                             <div class="modal-dialog modal-lg">
                                 <div class="modal-content">
@@ -136,7 +136,7 @@
                                             
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
-                                                    <label for="fecha-edit-{{ compra.cod_com }}">Fecha de Venta:</label>
+                                                    <label for="fecha-edit-{{ venta.cod_ven }}">Fecha de Venta:</label>
                                                     <input type="date" id="fecha-edit-{{ venta.cod_ven }}" name="fecha" class="form-control" value="{{ venta.fecha|date:'Y-m-d' }}" required>
                                                 </div>
                                                 <div class="col-md-6">
@@ -215,7 +215,7 @@
                                                             <td>
                                                                 <div class="input-group">
                                                                     <span class="input-group-text">$</span>
-                                                                    <input type="number" name="precio_uni_{{ forloop.counter0 }}" class="form-control precio-uni-edit" value="{{ detalle.precio_uni|floatformat:0 }}" min="1" required data-compra="{{ venta.cod_ven  }}">
+                                                                    <input type="number" name="precio_uni_{{ forloop.counter0 }}" class="form-control precio-uni-edit" value="{{ detalle.precio_uni|floatformat:0 }}" min="1" required data-venta="{{ venta.cod_ven  }}">
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -325,7 +325,7 @@
     </div>
 
     <!-- Modal para registrar venta -->
-    <div class="modal fade" id="compraModal" tabindex="-1" aria-labelledby="ventaModalLabel" aria-hidden="true">
+    <div class="modal fade" id="ventaModal" tabindex="-1" aria-labelledby="ventaModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
