@@ -191,9 +191,9 @@ h1{
 /* Desktop Computers (1441px and above) */
 @media screen and (min-width: 1400px) {
     .mensaje {
-        margin-top: 130px;
+        margin-top: 11.4%;
         width: 500px;
-        margin-bottom: 2%;
+        margin-bottom: 7.5%;
     }
 
     #carouselGanadero {

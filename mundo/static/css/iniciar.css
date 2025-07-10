@@ -553,10 +553,22 @@ input[type="password"] {
 /* Desktop Computers (1600px y above) */
 @media screen and (min-width: 1400px) {
     .mensaje {
-        margin-top: 9%;
-        margin-bottom: 9%;
+        margin-top: 10.5%;
+        margin-bottom: 10.5%;
         width: 500px;
     }
+    
+    #toggleIcon_contraseña{
+    position: absolute;
+    right: 38px;
+    top: 70%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 16px;
+    transition: color 0.3s ease;
+    z-index: 2;
+}
 
     .formulario {
         min-width: 400px;

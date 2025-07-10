@@ -601,6 +601,13 @@ button {
     right: -70%;
     top: 2px;
     }
+
+    /* Ajustes para el formulario de búsqueda */
+    .filtrado-container {
+    margin-left: 102%;
+    margin-top: -11.3%; 
+    }
+
     .navbar-form {
     position: relative;
     margin-top: 3%;
@@ -615,7 +622,7 @@ button {
     }
     .fichas {
     margin-top: 1%;
-    margin-bottom: 37.5%;
+    margin-bottom: 26.2%;
 }
     
 }

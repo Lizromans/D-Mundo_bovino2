@@ -560,7 +560,8 @@ button {
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     padding: 15px;
     position: relative;
-    margin-bottom: 23.5%;
+    margin-top: 5%;
+    margin-bottom: 31%;
     transition: transform 0.5s ease, box-shadow 0.3s ease;
     }
 }

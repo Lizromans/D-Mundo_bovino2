@@ -717,5 +717,27 @@ input[type="checkbox"]:required:not(:checked) ~ .error-terminos {
     left: 60%;
     margin-top: -36%;
     margin-bottom: -6%;
-}
+    }
+    #toggleIcon_password{
+    position: absolute;
+    right: 35px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 14px;
+    transition: color 0.3s ease;
+    z-index: 2;
+    }
+    #toggleIcon_confpassword {
+    position: absolute;
+    top: 72%;
+    right: 35px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 14px;
+    transition: color 0.3s ease;
+    z-index: 2;
+    }
 }
