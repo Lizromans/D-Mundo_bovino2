@@ -257,6 +257,22 @@ footer {
     color: #fdf6f6;
 }
 
+.creador{
+    width: 45%;
+    height: 45%;
+    border-radius: 10%;
+    margin-left: 15%;
+    margin-bottom: 1%;
+    margin-top: -5%;
+}
+
+.card-text{
+    font-size: 0.9rem;
+    color: #333;
+    margin-top: 5px;
+    line-height: 1.5;
+}
+
 /* Laptops (1024px to 1440px) */
 @media screen and (min-width: 1024px) and (max-width: 1340px) {
     #logo1{

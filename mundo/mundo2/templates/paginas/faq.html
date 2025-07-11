@@ -17,7 +17,7 @@
             {% for message in messages %}
                 <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
                     {{ message }}
-                    <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                    <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'"></button>
                 </div>
             {% endfor %}
         {% endif %}
@@ -492,6 +492,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel1">¿Cómo puedo registrarme en el sistema?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <ol>
@@ -503,9 +504,6 @@
                     </ol>
                     <p>Si tienes problemas con el registro, contacta a soporte técnico.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -516,6 +514,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel2">¿Qué hacer si olvidé mi contraseña?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <ol>
@@ -528,9 +527,6 @@
                     </ol>
                     <p>El enlace de recuperación tiene una validez de 24 horas.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -541,6 +537,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel3">¿Cómo cambio mi información de contacto?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <ol>
@@ -553,9 +550,6 @@
                     <p>Recuerda mantener tu información de contacto actualizada para recibir notificaciones importantes.
                     </p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -566,6 +560,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel4">¿Cómo cambiar tu contraseña?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <ol>
@@ -577,9 +572,6 @@
                     </ol>
                     <p>Si tienes problemas con el cambio de contraseña, contacta a soporte técnico.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -590,6 +582,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel5">¿Cómo registro un nuevo animal en el sistema?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <ol>
@@ -602,9 +595,6 @@
                     </ol>
                     <p>Cada animal debe tener un identificador único en el sistema.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -615,6 +605,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel6">¿Cómo actualizo el peso o estado de salud del ganado?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <ol>
@@ -628,9 +619,6 @@
                     </ol>
                     <p>El sistema mantendrá un historial de todos los registros para análisis futuros.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -641,6 +629,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel7">¿Qué tipos de documentos puedo cargar al sistema?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <ul>
@@ -654,9 +643,6 @@
                     </ul>
                     <p>Formatos aceptados: PDF, JPG, PNG (máximo 10MB por archivo)</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -667,6 +653,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel8">¿Cómo registro la venta?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p>Para registrar una transacción de compra:</p>
@@ -680,9 +667,6 @@
                     </ol>
                     <p>El sistema actualizará automáticamente tu inventario después de completar la transacción.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -692,6 +676,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel8">¿Cómo registro la venta?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p>Para registrar una venta:</p>
@@ -704,9 +689,6 @@
                     </ol>
                     <p>El sistema actualizará automáticamente tu inventario después de completar la transacción.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -716,6 +698,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel8">Tiempos de respuesta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <ol>
@@ -723,9 +706,6 @@
                         <li><strong>Problemas importantes (funcionalidades principales afectadas)</strong>: 4-8 horas laborales</li>
                         <li><strong>Consultas generales</strong>: 24-48 horas laborales</li>
                     </ol>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -737,6 +717,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel9">Formulario de soporte</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <form method="post" action="{% url 'formulario_soporte' %}" enctype="multipart/form-data">
@@ -793,6 +774,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabelCreadores">Creadores de la página</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p class="mb-4">Somos un equipo apasionado por crear experiencias web innovadoras y accesibles. 
@@ -803,10 +785,10 @@
                         <div class="col-md-6">
                             <div class="card creadores-card">
                                 <div class="card-body">
-                                    <img src="" alt="creador">
+                                    <img src="{% static 'img/lizeth.jpg' %}" class="creador" alt="creador">
                                     <h5 class="card-title">Lizeth Roman</h5>
                                     <h6 class="card-subtitle">Desarrolladora Frontend y Backend</h6>
-                                    <p class="card-text">Especialista en diseño UI/UX.</p>
+                                    <p class="card-text">Diseñadora UI/UX, enfocada en crear experiencias digitales completas que combinan funcionalidad, estética y usabilidad.</p>
                                 </div>
                             </div>
                         </div>
@@ -815,16 +797,16 @@
                         <div class="col-md-6">
                             <div class="card creadores-card">
                                 <div class="card-body">
-                                    <img src="" alt="creador">
+                                    <img src="{% static 'img/diego.jpg' %}" class="creador" alt="creador">
                                     <h5 class="card-title">Diego Ramirez</h5>
                                     <h6 class="card-subtitle">Desarrollador frontend y Backend</h6>
-                                    <p class="card-text">Especialista en bases de datos y arquitectura de sistemas con enfoque en soluciones.</p>
+                                    <p class="card-text">Enfocado en el manejo de bases de datos y la arquitectura de sistemas.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 
-                    <p class="contacto-creadores">Para contactar con nuestro equipo de desarrollo, por favor utiliza el formulario de soporte o escribe a <span class="contacto-email">info@mundobovino.com</span></p>
+                    <p class="contacto-creadores">Para contactar con nuestro equipo de desarrollo, por favor utiliza el formulario de soporte o escribe a <span class="contacto-email">mundobvinoapp@gmail.com</span></p>
                 </div>
             </div>
         </div>
@@ -836,6 +818,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel10">¿Cómo doy de baja a un animal por venta o muerte?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Para dar de baja por muerte:</strong></p>
@@ -858,9 +841,6 @@
                     
                     <p>Los animales vendidos aparecerán en la pestaña "Vendidos" con su estado marcado como "vendido" y la fecha de venta correspondiente.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -870,6 +850,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel">¿Es posible registrar eventos como vacunaciones o tratamientos médicos?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Sí, es posible registrar eventos médicos.</strong> Puedes hacerlo siguiendo estos pasos:</p>
@@ -897,9 +878,6 @@
                     </ol>
                     <p><strong>Beneficios:</strong> Mantén un registro organizado de tu historial , establece recordatorios para próximas dosis y ten toda la información importante en un solo lugar.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -909,6 +887,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel">¿Cómo filtrar los animales por fecha, edad, etc?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Puedes filtrar los animales utilizando múltiples criterios.</strong> Aquí te explicamos cómo:</p>
@@ -928,9 +907,6 @@
                     </ol>
                     <p><strong>Beneficios:</strong> Encuentra rápidamente animales específicos, organiza tu información por categorías y optimiza la gestión de tu inventario animal.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -940,6 +916,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel9">¿Cómo genero la factura automáticamente?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p>Para generar una factura automática:</p>
@@ -951,9 +928,6 @@
                     </ol>
                     <p>El sistema insertará automáticamente los datos de la venta en la plantilla y generará un archivo listo para imprimir o enviar al cliente.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -963,6 +937,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel10">¿Es posible ver el historial de ventas por cliente?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p>Sí, es posible ver el historial de ventas por cliente. Para consultarlo:</p>
@@ -974,9 +949,6 @@
                     </ol>
                     <p>El sistema filtrará automáticamente todas las transacciones del cliente seleccionado, mostrando información como fecha, número de venta, total y permitiendo ver los detalles de cada transacción.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -986,6 +958,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel24">¿Cómo puedo filtrar mis eventos?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Para filtrar tus eventos, sigue estos pasos:</strong></p>
@@ -1006,9 +979,6 @@
                     </ol>
                     <p>Este sistema te permite organizar tu vista según el estado o tipo de actividad que necesites revisar, facilitando la gestión de tu agenda.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1018,6 +988,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel24">¿Cómo puedo generar un reporte de todo mi inventario ganadero?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Actualmente no es posible generar un reporte descargable del inventario ganadero, pero puedes visualizar toda la información:</strong></p>
@@ -1040,9 +1011,6 @@
                     </ol>
                     <p>Aunque no hay función de descarga, toda la información está disponible para consulta directa en el sistema.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1052,6 +1020,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel11">¿Se actualiza automáticamente el inventario cuando registro una venta?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p>Sí, el inventario se actualiza automáticamente cuando registras una venta. El proceso es el siguiente:</p>
@@ -1063,9 +1032,6 @@
                     </ol>
                     <p>No es necesario realizar ninguna acción manual para actualizar el inventario. El sistema gestiona automáticamente todos los cambios de estado y mantiene un registro preciso de animales disponibles y vendidos.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1075,6 +1041,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel12">¿Cómo cargo los comprobantes o facturas de mis compras?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p>Para cargar los comprobantes o facturas de tus compras, sigue estos pasos:</p>
@@ -1093,9 +1060,6 @@
                     </ol>
                     <p><strong>Importante:</strong> Los archivos deben estar en formato PDF y no exceder los 2MB de tamaño.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1105,6 +1069,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel13">¿Hay límite de tamaño para los documentos que subo?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p>Sí, existe un límite de tamaño para los documentos que puedes subir al sistema:</p>
@@ -1120,9 +1085,6 @@
                     </ol>
                     <p><strong>Recomendación:</strong> Asegúrate de que tus archivos estén en formato PDF y no excedan los 2MB antes de intentar subirlos al sistema.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1132,6 +1094,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel14">¿Cómo organizo los documentos por categorías?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Para filtrar o ver por categoría:</strong></p>
@@ -1142,9 +1105,6 @@
                     </ol>
                     <p>Esta organización te ayudará a encontrar rápidamente los documentos que necesitas.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1154,6 +1114,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel15">¿Cómo agrego un nuevo contacto al sistema?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Para agregar un nuevo contacto:</strong></p>
@@ -1171,9 +1132,6 @@
                     </ol>
                     <p>El nuevo contacto aparecerá en la lista principal junto con los demás contactos existentes. Si necesitas cancelar el proceso, puedes hacer clic en "Cancelar".</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1183,6 +1141,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel16">¿Puedo categorizar mis contactos (veterinarios, proveedores, clientes)?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Sí, puedes categorizar tus contactos fácilmente:</strong></p>
@@ -1201,9 +1160,6 @@
                     </ol>
                     <p>Esta categorización te permite organizar mejor tus contactos y encontrar rápidamente el tipo de profesional que necesitas.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1213,6 +1169,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel17">¿Es posible vincular contactos a transacciones específicas?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>No es posible vincular contactos directamente con otras transacciones:</strong></p>
@@ -1224,9 +1181,6 @@
                     </ol>
                     <p>El sistema de contactos está diseñado como una agenda digital para mantener organizada la información de tus contactos profesionales relacionados con la ganadería.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1236,6 +1190,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel18">¿Cómo actualizo la información de un contacto existente?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Para actualizar un contacto existente:</strong></p>
@@ -1255,9 +1210,6 @@
                     </ol>
                     <p>Los cambios se reflejarán inmediatamente en la tarjeta del contacto. Si no deseas guardar los cambios, puedes hacer clic en "Cancelar".</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1267,6 +1219,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel19">¿Puedo compartir documentos con otros usuarios o exportarlos?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>No es posible compartir documentos directamente desde la aplicación:</strong></p>
@@ -1284,9 +1237,6 @@
                     </ol>
                     <p>El sistema está diseñado para uso personal y mantiene la información de forma privada y segura en tu cuenta.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1296,6 +1246,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel20">¿Están protegidos mis documentos? ¿Quién puede acceder a ellos?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Solo el administrador puede ver los documentos:</strong></p>
@@ -1313,9 +1264,6 @@
                     </ol>
                     <p>Esta configuración de seguridad protege tu información sensible y mantiene el control de acceso centralizado en la administración del sistema.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1325,6 +1273,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel21">¿Cómo recupero un documento que eliminé por error?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Para evitar que borres un documento por error:</strong></p>
@@ -1342,9 +1291,6 @@
                     </ol>
                     <p><strong>Importante:</strong> No existe función de recuperación una vez eliminado el documento. Por eso es crucial usar la confirmación de seguridad cuidadosamente.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1354,6 +1300,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel22">¿Puedo exportar mi lista de contactos?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>No se puede exportar tu listado de contactos:</strong></p>
@@ -1371,9 +1318,6 @@
                     </ol>
                     <p>El sistema está diseñado para mantener los contactos seguros y accesibles únicamente desde la plataforma interna.</p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1383,6 +1327,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalLabel23">¿Qué navegadores son compatibles con el sistema?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <p><strong>Los navegadores que permiten correr el programa son Chrome y Microsoft Edge:</strong></p>
@@ -1399,9 +1344,6 @@
                         <li>Otros navegadores pueden no funcionar correctamente o presentar problemas de compatibilidad</li>
                     </ol>
                     <p>Asegúrate de usar uno de estos navegadores compatibles para acceder sin problemas a todas las funciones del sistema.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
