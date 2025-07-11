@@ -150,17 +150,17 @@
                                         <i class="fas fa-exclamation-circle me-1"></i> HOY
                                     </h6>
                                     {% for evento in recordatorios.hoy %}
-                                    <div class="dropdown-item reminder-item agenda-item">
+                                    <a href="{% url 'calendario' %}?evento={{ evento.cod_age }}{% if evento.fecha %}&date={{ evento.fecha|date:'Y-m-d' }}{% endif %}" 
+                                       class="dropdown-item reminder-item agenda-item" 
+                                       style="text-decoration: none; color: inherit;">
                                         <span class="time-badge agenda-time">
                                             {{ evento.hora|time:"g:i A" }}
                                         </span>
                                         <div class="event-info">
                                             <div class="event-type agenda-type">{{ evento.tipo }}</div>
-                                            <a href="{% url 'calendario' %}?evento={{ evento.cod_age }}{% if evento.fecha %}&date={{ evento.fecha|date:'Y-m-d' }}{% endif %}" class="event-link">
-                                                <span class="event-description">{{ evento.descripcion }}</span>
-                                            </a>
+                                            <span class="event-description">{{ evento.descripcion }}</span>
                                         </div>
-                                    </div>
+                                    </a>
                                     {% endfor %}
                                 </div>
                                 {% endif %}
@@ -173,17 +173,17 @@
                                         <i class="fas fa-calendar-day me-1"></i> MAÑANA
                                     </h6>
                                     {% for evento in recordatorios.un_dia %}
-                                    <div class="dropdown-item reminder-item agenda-item">
+                                    <a href="{% url 'calendario' %}?evento={{ evento.cod_age }}{% if evento.fecha %}&date={{ evento.fecha|date:'Y-m-d' }}{% endif %}" 
+                                       class="dropdown-item reminder-item agenda-item" 
+                                       style="text-decoration: none; color: inherit;">
                                         <span class="time-badge agenda-time">
                                             {{ evento.hora|time:"g:i A" }}
                                         </span>
                                         <div class="event-info">
                                             <div class="event-type agenda-type">{{ evento.tipo }}</div>
-                                            <a href="{% url 'calendario' %}?evento={{ evento.cod_age }}{% if evento.fecha %}&date={{ evento.fecha|date:'Y-m-d' }}{% endif %}" class="event-link">
-                                                <span class="event-description">{{ evento.descripcion }}</span>
-                                            </a>
+                                            <span class="event-description">{{ evento.descripcion }}</span>
                                         </div>
-                                    </div>
+                                    </a>
                                     {% endfor %}
                                 </div>
                                 {% endif %}
@@ -197,48 +197,48 @@
                                     </h6>
                                     
                                     {% for evento in recordatorios.dos_dias %}
-                                    <div class="dropdown-item reminder-item agenda-item">
+                                    <a href="{% url 'calendario' %}?evento={{ evento.cod_age }}{% if evento.fecha %}&date={{ evento.fecha|date:'Y-m-d' }}{% endif %}" 
+                                       class="dropdown-item reminder-item agenda-item" 
+                                       style="text-decoration: none; color: inherit;">
                                         <span class="time-badge agenda-time">
                                             <small>{{ evento.fecha|date:"d/m" }}</small><br>
                                             {{ evento.hora|time:"g:i A" }}
                                         </span>
                                         <div class="event-info">
                                             <div class="event-type agenda-type">{{ evento.tipo }}</div>
-                                            <a href="{% url 'calendario' %}?evento={{ evento.cod_age }}{% if evento.fecha %}&date={{ evento.fecha|date:'Y-m-d' }}{% endif %}" class="event-link">
-                                                <span class="event-description">{{ evento.descripcion }}</span>
-                                            </a>
+                                            <span class="event-description">{{ evento.descripcion }}</span>
                                         </div>
-                                    </div>
+                                    </a>
                                     {% endfor %}
                                     
                                     {% for evento in recordatorios.cuatro_dias %}
-                                    <div class="dropdown-item reminder-item agenda-item">
+                                    <a href="{% url 'calendario' %}?evento={{ evento.cod_age }}{% if evento.fecha %}&date={{ evento.fecha|date:'Y-m-d' }}{% endif %}" 
+                                       class="dropdown-item reminder-item agenda-item" 
+                                       style="text-decoration: none; color: inherit;">
                                         <span class="time-badge agenda-time">
                                             <small>{{ evento.fecha|date:"d/m" }}</small><br>
                                             {{ evento.hora|time:"g:i A" }}
                                         </span>
                                         <div class="event-info">
                                             <div class="event-type agenda-type">{{ evento.tipo }}</div>
-                                            <a href="{% url 'calendario' %}?evento={{ evento.cod_age }}{% if evento.fecha %}&date={{ evento.fecha|date:'Y-m-d' }}{% endif %}" class="event-link">
-                                                <span class="event-description">{{ evento.descripcion }}</span>
-                                            </a>
+                                            <span class="event-description">{{ evento.descripcion }}</span>
                                         </div>
-                                    </div>
+                                    </a>
                                     {% endfor %}
                                     
                                     {% for evento in recordatorios.siete_dias %}
-                                    <div class="dropdown-item reminder-item agenda-item">
+                                    <a href="{% url 'calendario' %}?evento={{ evento.cod_age }}{% if evento.fecha %}&date={{ evento.fecha|date:'Y-m-d' }}{% endif %}" 
+                                       class="dropdown-item reminder-item agenda-item" 
+                                       style="text-decoration: none; color: inherit;">
                                         <span class="time-badge agenda-time">
                                             <small>{{ evento.fecha|date:"d/m" }}</small><br>
                                             {{ evento.hora|time:"g:i A" }}
                                         </span>
                                         <div class="event-info">
                                             <div class="event-type agenda-type">{{ evento.tipo }}</div>
-                                            <a href="{% url 'calendario' %}?evento={{ evento.cod_age }}{% if evento.fecha %}&date={{ evento.fecha|date:'Y-m-d' }}{% endif %}" class="event-link">
-                                                <span class="event-description">{{ evento.descripcion }}</span>
-                                            </a>
+                                            <span class="event-description">{{ evento.descripcion }}</span>
                                         </div>
-                                    </div>
+                                    </a>
                                     {% endfor %}
                                 </div>
                                 {% endif %}

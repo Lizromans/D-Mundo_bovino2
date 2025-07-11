@@ -186,7 +186,7 @@ header {
 
 /* Estilo para el badge de hora */
 .time-badge {
-    background-color: var(--color-fondo);
+    background-color: var(--color-secundario)!important; 
     color: rgb(0, 0, 0);
     padding: 1px 6px;
     border-radius: 4px;
