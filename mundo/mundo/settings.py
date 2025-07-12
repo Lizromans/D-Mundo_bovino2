@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-9_)h67k08&(4dghv0!&*0+021zrz#89qsqsa94@qeqy!e_&1ip
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['mundobovino.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -152,3 +152,8 @@ import os
 from django.utils import timezone
 USE_TZ = True
 TIME_ZONE = 'America/Bogota'  # o tu zona horaria
+
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = '/static/'
+STATIC_ROOT = '/home/mundobovino/D-Mundo_bovino2/staticfiles'
+
